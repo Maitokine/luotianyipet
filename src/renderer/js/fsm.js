@@ -25,6 +25,8 @@ export class Fsm {
     this.sfx = deps.sfx || null;
     this.moveWindow = deps.moveWindow || (() => {});
     this.onSingEnd = deps.onSingEnd || null;
+    // 唱歌被更高优先级打断（拖拽/抛掷）时通知 music 模块停音频（否则音频会在 fsm 已退出唱歌态后继续播）
+    this.onSingInterrupted = deps.onSingInterrupted || null;
 
     this.daily = 'walk';            // walk/daze/pace/hum/sleep/sit
     this.interrupt = null;          // { type, data, elapsed }
@@ -192,12 +194,18 @@ export class Fsm {
   }
 
   _enterInterrupt(type, data = {}) {
-    if (!this.interrupt) {
+    const prev = this.interrupt;
+    if (!prev) {
       this._resume = {
         daily: this.daily,
         actionLeft: this.actionLeft,
         dailySecs: this.dailySecs,
       };
+    }
+    // 唱歌态被更高优先级打断（grabbed/physics 优先级 5 > sing 4）：
+    // music 模块的音频不会自己停，必须显式通知（真机反馈：拖拽后双击切歌两首叠加的根因）
+    if (prev && prev.type === 'sing' && type !== 'sing' && this.onSingInterrupted) {
+      this.onSingInterrupted();
     }
     this.interrupt = { type, data, elapsed: 0 };
     this._fxAcc = 0;

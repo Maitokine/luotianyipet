@@ -43,10 +43,21 @@ export class Music {
 
   get singing() { return this.fsm.singing; }
 
+  // 本模块是否真有声音在放（audio 或哼唱计时器）——fsm 打断后 singing 会变 false 但音频可能残留
+  get playing() { return Boolean(this.audio) || Boolean(this._humTimer); }
+
+  // fsm 打断唱歌态（拖拽/抛掷优先级更高）时回调：立即停掉声音，防止状态不同步后双击叠加两首
+  onSingInterrupted() {
+    if (this.playing || this.song) {
+      this._finish(this._maxRatio >= REWARD_RATIO);
+    }
+  }
+
   // 双击入口（A17 点歌 / A18 停止）
   async toggle() {
     if (this._busy) return;
-    if (this.singing) {
+    // 用自身播放状态判断（fsm.singing 可能因打断与音频不同步）：有声音在放 → 停
+    if (this.singing || this.playing) {
       this.stopSing(); // 手动停止：按已达比例结算
       return;
     }
@@ -56,6 +67,8 @@ export class Music {
   async startSing() {
     this._busy = true;
     try {
+      // 防御清场：任何残留的旧音频/哼唱先停再点新歌（兜底所有状态不同步路径，绝不叠加两首）
+      if (this.playing || this.song) this._finish(this._maxRatio >= REWARD_RATIO);
       // 即时反馈（真机反馈修复）：网络点歌可能要等数秒，先惊醒+标记互动并提示，
       // 避免用户双击后长时间无任何变化、以为"双击没反应"
       this.fsm.trigger('dblclick');

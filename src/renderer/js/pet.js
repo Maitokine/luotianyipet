@@ -19,6 +19,10 @@ import { runSelftest } from './selftest.js';
 
 const api = window.petApi;
 
+// 主进程就地执行的动作集（与 ipc.js dispatchAction 一致）：
+// 右键 HTML 菜单在渲染层触发这些动作时必须经 sendAction 转发主进程，否则无反应
+const MAIN_PROCESS_ACTIONS = ['win.toggle-visible', 'app.quit', 'app.autostart', 'open-settings'];
+
 // 心情标签（设置窗成长页「心情状态」实时显示）
 function moodLabel(f) {
   if (f.interrupt) {
@@ -96,6 +100,8 @@ async function main() {
 
   // 音乐点歌（A17/A18/A19）
   const music = new Music({ api, fsm, bubble, growth, dialogue });
+  // 唱歌被拖拽/抛掷打断 → 立即停音频（否则 fsm 已退出唱歌态而声音还在放，双击切歌会叠加两首）
+  fsm.onSingInterrupted = () => music.onSingInterrupted();
 
   // 提醒四件套（A23/A24/A25）：久坐/喝水/番茄钟/便签，全部走打断态
   const reminders = new Reminders({
@@ -176,8 +182,16 @@ async function main() {
       case 'tools.pomodoro':
         reminders.togglePomodoro();
         break;
-      default:
-        break; // win.toggle-visible / app.* / open-settings 由主进程就地处理，不会到达这里
+      default: {
+        // 真机反馈根因修复：右键 HTML 菜单里"设置/成长面板/便签管理/自启/退出/隐藏小人"
+        // 是主进程动作（托盘走主进程 dispatchAction 就地执行），但右键菜单在渲染层——
+        // 此前落到这里直接 break，点这些项毫无反应。必须显式转发主进程。
+        // 白名单转发（防死循环：主进程对未知动作会广播回渲染层）
+        if (MAIN_PROCESS_ACTIONS.includes(action)) {
+          api.sendAction(action, payload);
+        }
+        break;
+      }
     }
   }
   api.onAction((msg) => {
@@ -268,7 +282,7 @@ async function main() {
   dance.start();
 
   if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('selftest') === '1') {
-    runSelftest({ api, reminders, bubble, music, fsm, doc: document });
+    runSelftest({ api, reminders, bubble, music, fsm, doc: document, menu, windowctl });
     return; // 自检模式不走 smoke 退出流程
   }
   api.smokeReady();

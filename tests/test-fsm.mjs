@@ -357,6 +357,53 @@ export function run(t) {
     t.ok(fsm.actionLeft > 13 && fsm.actionLeft <= 15.1, '恢复剩余时长');
   }
 
+  // ---------- 唱歌被打断 → onSingInterrupted 通知（真机反馈：拖拽后双击切歌两首叠加的根因） ----------
+  {
+    let interrupted = 0;
+    const { fsm } = makeFsm({ onSingInterrupted: () => { interrupted += 1; } });
+    fsm.setGeometry({ workArea: WA });
+    fsm.start();
+    t.ok(fsm.beginSing(), '进入唱歌态');
+    fsm.trigger('drag-start'); // grabbed(5) 打断 sing(4)
+    t.eq(interrupted, 1, '拖拽打断唱歌触发 onSingInterrupted');
+    t.eq(fsm.singing, false, 'fsm 已退出唱歌态');
+    fsm.trigger('drag-end');
+    t.eq(interrupted, 1, '拖拽结束不重复通知');
+  }
+  {
+    let interrupted = 0;
+    let singEnded = 0;
+    const { fsm } = makeFsm({
+      onSingInterrupted: () => { interrupted += 1; },
+      onSingEnd: () => { singEnded += 1; },
+    });
+    fsm.setGeometry({ workArea: WA });
+    fsm.start();
+    fsm.beginSing();
+    fsm.endSing(); // 正常结束（music 主动停）
+    t.eq(interrupted, 0, '正常结束不触发 interrupted');
+    t.eq(singEnded, 1, '正常结束触发 onSingEnd');
+  }
+  {
+    let interrupted = 0;
+    const { fsm } = makeFsm({ onSingInterrupted: () => { interrupted += 1; } });
+    fsm.setGeometry({ workArea: WA });
+    fsm.start();
+    fsm.beginSing();
+    fsm.trigger('click'); // click-react(2) < sing(4)：不打断
+    t.eq(interrupted, 0, '低优先级事件不打断唱歌');
+    t.eq(fsm.singing, true, '仍在唱歌态');
+  }
+  {
+    let interrupted = 0;
+    const { fsm } = makeFsm({ onSingInterrupted: () => { interrupted += 1; } });
+    fsm.setGeometry({ workArea: WA });
+    fsm.start();
+    fsm.beginDance({ source: 'manual', duration: 5 });
+    fsm.trigger('drag-start'); // grabbed 打断 dance（不是 sing）
+    t.eq(interrupted, 0, '打断跳舞不触发唱歌打断回调');
+  }
+
   // ---------- 几何：地面计算 ----------
   {
     const { fsm } = makeFsm();

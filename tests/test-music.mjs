@@ -223,6 +223,43 @@ export async function run(t) {
     t.ok(bubble.lyrics.every((l) => l.text !== '♪ ～'), '不再显示无信息量的 "♪ ～"');
   }
 
+  // ---- 真机修复回归：fsm 打断唱歌后音频残留 → onSingInterrupted 立即停 ----
+  {
+    const { music, fsm, audios } = setup();
+    await music.toggle();
+    t.ok(audios.length >= 1, '已开播');
+    // 模拟拖拽打断：fsm 退出唱歌态但音频未被 music 感知（打断前的真实状态）
+    fsm._singing = false;
+    t.eq(music.singing, false, 'fsm 已不在唱歌态');
+    t.ok(music.playing, '但音频仍在播放（playing=true）');
+    music.onSingInterrupted(); // fsm 打断回调
+    t.eq(audios[0].pauseCalls, 1, '打断回调停掉音频');
+    t.eq(music.song, null, '曲目已清空');
+    t.eq(music.playing, false, '不再播放');
+  }
+
+  // ---- 真机修复回归：toggle 对残留音频先停再放（不叠加两首） ----
+  {
+    const { music, fsm, audios, api } = setup();
+    await music.toggle();
+    fsm._singing = false; // 模拟打断后状态不同步
+    await music.toggle(); // 用户双击切歌
+    t.eq(audios.length, 1, '未创建第二个音频（先停旧歌）');
+    t.eq(audios[0].pauseCalls, 1, '旧音频被停掉');
+    t.eq(api.pickSongCalls, 1, '没有重复点歌');
+  }
+
+  // ---- 真机修复回归：startSing 开头清场残留 ----
+  {
+    const { music, fsm, audios } = setup();
+    await music.toggle();
+    fsm._singing = false; // 模拟打断后残留
+    await music.startSing(); // 直接调用（如闲逛随机真唱路径）
+    t.eq(audios[0].pauseCalls, 1, 'startSing 前先停掉残留音频');
+    t.ok(audios.length >= 2, '新音频正常创建');
+    t.eq(audios.filter((a) => a.pauseCalls === 0).length, 1, '只有新音频在播');
+  }
+
   // ---- 闲逛随机真唱判定（T5.4 通用页开关，默认关）----
   {
     const base = { enabled: true, daily: 'hum', singing: false, dancing: false, grabbed: false, rand: () => 0.1 };

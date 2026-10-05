@@ -1,15 +1,16 @@
 /* HTML 右键菜单（M5 / T5.3，A6）：与托盘菜单同源（menumodel），洛天依青灰主题 */
+/* 真机反馈修复：默认折叠态 12 项 + 4 组标签必须完整可见（窗口 420px），展开二级时内部滚动 */
 #menu {
   position: absolute;
   z-index: 50;
   min-width: 176px;
   max-width: 220px;
-  max-height: 404px;
+  max-height: 412px;
   overflow-y: auto;
   background: rgba(255, 255, 255, 0.98);
   border: 1px solid rgba(102, 204, 255, 0.45);
   border-radius: 10px;
-  padding: 5px 0;
+  padding: 3px 0;
   box-shadow: 0 8px 26px rgba(60, 130, 170, 0.28);
   font-size: 13px;
   color: #3d4a52;
@@ -18,10 +19,10 @@
 #menu::-webkit-scrollbar { width: 6px; }
 #menu::-webkit-scrollbar-thumb { background: rgba(102, 204, 255, 0.35); border-radius: 3px; }
 
-.menu-group + .menu-group { border-top: 1px solid rgba(102, 204, 255, 0.25); margin-top: 3px; padding-top: 3px; }
+.menu-group + .menu-group { border-top: 1px solid rgba(102, 204, 255, 0.25); margin-top: 2px; padding-top: 2px; }
 
 .menu-group-label {
-  padding: 3px 14px 1px;
+  padding: 2px 14px 1px;
   font-size: 11px;
   color: #7fb8d4;
   letter-spacing: 2px;
@@ -30,7 +31,7 @@
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 5px 10px 5px 8px;
+  padding: 4px 10px 4px 8px;
   cursor: pointer;
   white-space: nowrap;
 }
