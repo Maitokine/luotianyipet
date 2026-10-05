@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>洛天依 · 设置</title>
+  <link rel="stylesheet" href="css/settings.css" />
+</head>
+<body>
+  <div id="app">
+    <nav id="tabs">
+      <button class="tab active" data-tab="growth">成长</button>
+      <button class="tab" data-tab="outfit">换装</button>
+      <button class="tab" data-tab="reminders">提醒</button>
+      <button class="tab" data-tab="general">通用</button>
+    </nav>
+    <main id="pages">
+
+      <!-- 成长页 -->
+      <section id="page-growth" class="page active">
+        <div class="card hero">
+          <div class="lv-badge" id="g-level">Lv.1</div>
+          <div class="hero-info">
+            <div class="mood">心情：<span id="g-mood">闲逛中</span></div>
+            <div class="hero-line">穿着：<span id="g-outfit">初见·默认装</span></div>
+            <div class="hero-line">今日陪伴：<span id="g-today">0 分钟</span> · 本次：<span id="g-session">0 秒</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row-label">经验 <span class="row-value" id="g-exp-text">0 / 120</span></div>
+          <div class="bar"><div class="bar-fill" id="g-exp-bar"></div></div>
+        </div>
+        <div class="card">
+          <div class="row-label">好感度 <span class="row-value" id="g-aff-text">10 · 陌生</span></div>
+          <div class="hearts" id="g-hearts">♡♡♡♡♡</div>
+        </div>
+        <div class="stat-row">
+          <div class="card stat"><div class="stat-num" id="g-days">1</div><div class="stat-label">累计陪伴天数</div></div>
+          <div class="card stat"><div class="stat-num" id="g-clicks">0</div><div class="stat-label">总互动次数</div></div>
+          <div class="card stat"><div class="stat-num" id="g-songs">0</div><div class="stat-label">听完的歌数</div></div>
+        </div>
+        <div class="card grow-unlocks">
+          <div class="row-label">解锁进度</div>
+          <ul class="unlock-list" id="g-unlocks"></ul>
+        </div>
+      </section>
+
+      <!-- 换装页 -->
+      <section id="page-outfit" class="page">
+        <div class="outfit-grid" id="outfit-grid"></div>
+        <p class="tip">未解锁的衣服达到对应等级后自动可用，换装立即生效</p>
+      </section>
+
+      <!-- 提醒页 -->
+      <section id="page-reminders" class="page">
+        <div class="card">
+          <label class="switch-row"><span>久坐提醒</span><input type="checkbox" id="r-sitting-enabled" /></label>
+          <div class="inline-row">每
+            <select id="r-sitting-min"></select>
+            分钟提醒我起来活动一下</div>
+        </div>
+        <div class="card">
+          <label class="switch-row"><span>喝水提醒</span><input type="checkbox" id="r-water-enabled" /></label>
+          <div class="inline-row">每
+            <select id="r-water-min"></select>
+            分钟提醒我喝口水</div>
+        </div>
+        <div class="card">
+          <div class="row-label">番茄钟 <span class="row-value pomo-status" id="r-pomo-status"></span></div>
+          <div class="inline-row">专注
+            <select id="r-pomo-focus"></select>
+            分钟 ＋ 休息
+            <select id="r-pomo-rest"></select>
+            分钟</div>
+          <div class="inline-row"><button class="btn" id="r-pomo-toggle">开始番茄钟</button></div>
+        </div>
+        <div class="card grow-notes">
+          <div class="row-label">便签 <span class="row-value">到点她会气泡提醒你</span></div>
+          <div class="note-form">
+            <input type="text" id="r-note-text" placeholder="要提醒的事，如：下午 3 点开会" maxlength="40" />
+            <input type="time" id="r-note-time" value="09:00" />
+            <label class="chk"><input type="checkbox" id="r-note-repeat" />每天重复</label>
+            <button class="btn" id="r-note-add">添加</button>
+          </div>
+          <div class="note-error hidden" id="r-note-error"></div>
+          <ul class="note-list" id="r-note-list"></ul>
+        </div>
+      </section>
+
+      <!-- 通用页 -->
+      <section id="page-general" class="page">
+        <div class="card">
+          <label class="switch-row"><span>开机自启</span><input type="checkbox" id="s-autostart" /></label>
+          <label class="switch-row"><span>置顶显示</span><input type="checkbox" id="s-ontop" /></label>
+          <label class="switch-row"><span>鼠标穿透<span class="sub">开启后点击会落到下层窗口，可从托盘菜单关闭</span></span><input type="checkbox" id="s-clickthrough" /></label>
+        </div>
+        <div class="card">
+          <div class="row-label">尺寸 <span class="row-value" id="s-scale-val">100%</span></div>
+          <div class="size-row" id="s-size-row">
+            <button class="size-btn" data-scale="0.7">小</button>
+            <button class="size-btn" data-scale="1">中</button>
+            <button class="size-btn" data-scale="1.4">大</button>
+          </div>
+          <div class="tip inline-tip">也可以在角色上滚动滚轮微调（50% ~ 200%）</div>
+        </div>
+        <div class="card">
+          <div class="row-label">透明度 <span class="row-value" id="s-opacity-val">100%</span></div>
+          <input type="range" id="s-opacity" min="20" max="100" step="5" />
+        </div>
+        <div class="card">
+          <label class="switch-row"><span>闲逛随机真唱<span class="sub">她一个人哼歌时，偶尔会真的唱一首</span></span><input type="checkbox" id="s-idlesing" /></label>
+          <label class="switch-row"><span>跟随音乐跳舞<span class="badge hidden" id="s-dance-badge">不可用</span></span><input type="checkbox" id="s-dance" /></label>
+        </div>
+        <div class="card meta">
+          <div>数据目录：<code id="s-datadir"></code></div>
+          <div>版本：<span id="s-version"></span></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+  <script type="module" src="js/settings.js"></script>
+</body>
+</html>

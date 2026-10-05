@@ -1,0 +1,41 @@
+{
+  "name": "luotianyi-pet",
+  "version": "1.0.0",
+  "description": "洛天依桌面宠物（个人自用）",
+  "main": "src/main/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "test": "node tests/run-all.mjs",
+    "build": "electron-builder --win portable"
+  },
+  "author": "Kokonoe Yoi",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^31.7.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "pet.luotianyi.desktop",
+    "productName": "洛天依桌宠",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*"
+    ],
+    "asarUnpack": [
+      "src/assets/sfx/*.wav"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "build/icon.png",
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "洛天依桌宠.exe"
+    }
+  }
+}
