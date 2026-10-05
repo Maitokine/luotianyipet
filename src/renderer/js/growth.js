@@ -11,13 +11,11 @@ export const CLICK_GAIN_COOLDOWN_MS = 10000; // 10s 内连点不重复计（A13�
 export const EXP_REWARDS = { companionMinute: 1, click: 2, song: 15, pomodoro: 10 };
 export const AFFECTION_REWARDS = { click: 1, song: 3, pomodoro: 2 };
 
-// 解锁表（PRD §5.5）
+// 解锁表（PRD §5.5）——当前仅保留默认装
 export const UNLOCKS = [
-  { level: 1, id: 'outfit_default', label: '初见·默认装' },
+  { level: 1, id: 'outfit_default', label: '洛天依 · 默认装' },
   { level: 2, id: 'lines_lively', label: '活泼台词包' },
   { level: 3, id: 'dance', label: '跳舞动作' },
-  { level: 3, id: 'outfit_spring', label: '春日裙' },
-  { level: 5, id: 'outfit_star', label: '星海礼服' },
   { level: 6, id: 'dance_moves', label: '花式舞步包' },
   { level: 7, id: 'air_spin', label: '空中旋转特技' },
 ];

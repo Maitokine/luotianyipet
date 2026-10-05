@@ -1,6 +1,6 @@
 // 几何纯函数：命中检测（K1）+ 行走地面计算（K2），可在 Node 中测试
 
-// 角色本地画布 180×200；命中区 = 头部椭圆 + 身体椭圆（近似轮廓）
+// 角色本地画布 180×200；命中区 = 头部椭圆 + 身体椭圆（适配新版 Q 版水手服形象）
 // x/y 为归一化到画布坐标的点（已含缩放归一），scale 为显示缩放
 export function pointOnCharacter(x, y, scale = 1) {
   const hit = (cx, cy, rx, ry) => {
@@ -8,7 +8,7 @@ export function pointOnCharacter(x, y, scale = 1) {
     const dy = (y - cy) / (ry * scale);
     return dx * dx + dy * dy <= 1;
   };
-  return hit(90, 80, 44, 50) || hit(90, 148, 46, 52);
+  return hit(90, 72, 38, 40) || hit(90, 150, 40, 40);
 }
 
 // 窗口底边贴住任务栏上沿：返回窗口应处的 y 坐标

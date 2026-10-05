@@ -82,22 +82,19 @@ export function run(t) {
     t.eq(sub(m, 'pet.action')[3].hint, null, '解锁后无提示');
   }
 
-  // ---------- 换装：解锁门控 + 当前穿着单选 ----------
+  // ---------- 换装：当前仅保留默认装 ----------
   {
     let m = buildMenuModel({ state: base });
     let items = sub(m, 'pet.outfit');
-    t.eq(items.map((i) => i.disabled), [false, true, true], '默认仅初见装可用');
-    t.eq(items.map((i) => i.checked), [true, false, false], '默认装勾选');
-    t.eq(items[1].hint, 'Lv.3 解锁', '春日裙提示 Lv.3');
-    t.eq(items[2].hint, 'Lv.5 解锁', '星海礼服提示 Lv.5');
+    t.eq(items.length, 1, '当前仅一套服装');
+    t.eq(items.map((i) => i.disabled), [false], '默认装可用');
+    t.eq(items.map((i) => i.checked), [true], '默认装勾选');
 
     const s = JSON.parse(JSON.stringify(base));
-    s.unlocked = ['outfit_default', 'outfit_spring'];
-    s.outfit = 'spring';
+    s.outfit = 'default';
     m = buildMenuModel({ state: s });
     items = sub(m, 'pet.outfit');
-    t.eq(items.map((i) => i.disabled), [false, false, true], '春日裙解锁后可用');
-    t.eq(items.map((i) => i.checked), [false, true, false], '当前穿着 spring 勾选');
+    t.eq(items.map((i) => i.checked), [true], '穿着 default 勾选');
   }
 
   // ---------- 提醒工具快捷配置 ----------
@@ -141,7 +138,7 @@ export function run(t) {
       { action: 'music.toggle', payload: undefined }, '普通项无载荷');
     t.eq(itemAction({ id: 'tools.notes', action: 'open-settings', payload: { tab: 'reminders' } }),
       { action: 'open-settings', payload: { tab: 'reminders' } }, '显式载荷原样分发');
-    t.eq(itemAction({ id: 'pet.outfit.spring', type: 'radio', action: 'pet.outfit', payload: { id: 'spring' } }),
-      { action: 'pet.outfit', payload: { id: 'spring' } }, '单选项用显式载荷（不生成 enabled）');
+    t.eq(itemAction({ id: 'pet.outfit.default', type: 'radio', action: 'pet.outfit', payload: { id: 'default' } }),
+      { action: 'pet.outfit', payload: { id: 'default' } }, '单选项用显式载荷（不生成 enabled）');
   }
 }

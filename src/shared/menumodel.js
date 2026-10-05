@@ -17,9 +17,7 @@ export const MANUAL_ACTIONS = [
 ];
 
 export const OUTFIT_ITEMS = [
-  { id: 'default', label: '初见·默认装', unlockId: 'outfit_default', level: 1 },
-  { id: 'spring', label: '春日裙', unlockId: 'outfit_spring', level: 3 },
-  { id: 'star', label: '星海礼服', unlockId: 'outfit_star', level: 5 },
+  { id: 'default', label: '洛天依 · 默认装', unlockId: 'outfit_default', level: 1 },
 ];
 
 // 叶项点击 → 要分发的动作与载荷

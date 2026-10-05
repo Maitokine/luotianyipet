@@ -1,11 +1,9 @@
-// 换装（M1 建立 / M3 接入解锁校验）：服装 = 调色板变量覆盖
+// 换装（M1 建立 / M3 接入解锁校验）：当前仅保留默认装
 import { RIG_PALETTES } from './palettes.js';
 
 // 服装注册表：解锁等级（存档 unlocked 数组为解锁事实来源，此处仅作元信息）
 export const OUTFITS = [
-  { id: 'default', label: '初见·默认装', unlockId: 'outfit_default', level: 1 },
-  { id: 'spring', label: '春日裙', unlockId: 'outfit_spring', level: 3 },
-  { id: 'star', label: '星海礼服', unlockId: 'outfit_star', level: 5 },
+  { id: 'default', label: '洛天依 · 默认装', unlockId: 'outfit_default', level: 1 },
 ];
 
 export class Outfit {
@@ -18,8 +16,9 @@ export class Outfit {
   // 返回 true=已穿上；false=未解锁或未知服装
   apply(outfitId) {
     const meta = OUTFITS.find((o) => o.id === outfitId);
+    if (!meta) return false; // 未知服装（如已删除的旧存档）直接拒绝
     const palette = RIG_PALETTES[outfitId] || RIG_PALETTES.default;
-    if (meta && this.state && Array.isArray(this.state.unlocked)) {
+    if (this.state && Array.isArray(this.state.unlocked)) {
       if (!this.state.unlocked.includes(meta.unlockId)) {
         return false; // 未解锁：拒绝切换（菜单/设置页负责灰显）
       }

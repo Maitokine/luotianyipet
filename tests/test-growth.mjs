@@ -46,8 +46,7 @@ export function run(t) {
   t.eq(CLICK_GAIN_COOLDOWN_MS, 10000, '单击 10s 冷却');
   t.eq(DECAY_PER_DAY, 5, '冷落每天 -5');
   t.eq(DECAY_GRACE_MS, 48 * HOUR, '冷落宽限 48h');
-  t.eq(unlocksForLevel(3).map((u) => u.id), ['dance', 'outfit_spring'], 'Lv3 解锁跳舞+春日裙');
-  t.eq(UNLOCKS.find((u) => u.id === 'outfit_star').level, 5, '星海礼服 Lv5');
+  t.eq(unlocksForLevel(3).map((u) => u.id), ['dance'], 'Lv3 解锁跳舞');
   t.eq(UNLOCKS.find((u) => u.id === 'air_spin').level, 7, '空中旋转 Lv7');
 
   // ---- 陪伴经验：每分钟 +1 ----
@@ -167,7 +166,7 @@ export function run(t) {
     growth.addExp(180); // 300
     t.eq(state.level, 3, '经验 300 → Lv3');
     const ids = state.unlocked;
-    t.ok(ids.includes('dance') && ids.includes('outfit_spring'), 'Lv3 解锁跳舞与春日裙');
+    t.ok(ids.includes('dance'), 'Lv3 解锁跳舞');
   }
   {
     // 跨多级一次性补齐
@@ -177,7 +176,7 @@ export function run(t) {
     const lu = events.filter((e) => e.type === 'levelup');
     t.eq(lu.length, 1, '一次 addExp 只发一次事件');
     t.eq(lu[0].ev.to, 8, '事件目标等级 8');
-    for (const id of ['lines_lively', 'dance', 'outfit_spring', 'outfit_star', 'dance_moves', 'air_spin']) {
+    for (const id of ['lines_lively', 'dance', 'dance_moves', 'air_spin']) {
       t.ok(state.unlocked.includes(id), `跨级补齐解锁 ${id}`);
     }
     t.eq(state.level, levelFromExp(state.exp), '等级与经验一致');
@@ -237,7 +236,6 @@ export function run(t) {
     t.eq(growth.tierKey(), 'beloved', '档位 key');
     t.eq(growth.tierLabel(), '挚爱', '档位名');
     t.eq(growth.isUnlocked('outfit_default'), true, '默认装已解锁');
-    t.eq(growth.isUnlocked('outfit_star'), false, '星海礼服未解锁');
   }
 
   // ---- syncState ----

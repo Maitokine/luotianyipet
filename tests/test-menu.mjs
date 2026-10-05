@@ -90,7 +90,7 @@ export function run(t) {
     t.eq(findAll(doc.els.menu, 'menu-group').length, 4, '渲染四个分组');
     t.eq(findAll(doc.els.menu, 'menu-node').filter((n) => n.parentNode.classList.contains('menu-group')).length, 12, '顶层 12 个节点');
     // 顶层 menu-node = 4 个 submenu 节点 + 8 个普通节点；二级行：尺寸3 + 动作4 + 换装3 + 提醒4
-    t.eq(findAll(doc.els.menu, 'menu-item').length, 12 + 3 + 4 + 3 + 4, '含二级菜单总行数齐全（12+14）');
+    t.eq(findAll(doc.els.menu, 'menu-item').length, 12 + 3 + 4 + 1 + 4, '含二级菜单总行数齐全（12+12）');
     t.eq(findAll(doc.els.menu, 'menu-sub').length, 4, '四个二级容器');
   }
 
