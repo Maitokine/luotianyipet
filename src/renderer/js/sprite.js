@@ -8,7 +8,8 @@ export const SPRITE_ACTIONS = {
   walk:         { fps: 8, loop: true,  dir: '../assets/sprites/walk' },
   'walk-right': { fps: 8, loop: true,  dir: '../assets/sprites/walk' },
   'walk-left':  { fps: 8, loop: true,  dir: '../assets/sprites/walk' },
-  sit:          { fps: 4, loop: true,  dir: '../assets/sprites/sit' },
+  sit:          { fps: 4, loop: true,  introCount: 4, dir: '../assets/sprites/sit' },
+  // sit 前 4 帧是坐下过渡，后面是坐姿循环；introCount=4 让小人坐下后不再站起
   sleep:        { fps: 2, loop: true,  dir: '../assets/sprites/sleep' },
   sing:         { fps: 6, loop: true,  dir: '../assets/sprites/sing' },
   dance:        { fps: 8, loop: true,  dir: '../assets/sprites/dance' },
@@ -52,9 +53,22 @@ export class SpriteLayer {
       if (this.current && this.frames.length && this.cfg) {
         this.elapsed += dt;
         const fps = this.cfg.fps || 8;
-        const idx = this.cfg.loop
-          ? Math.floor(this.elapsed * fps) % this.frames.length
-          : Math.min(Math.floor(this.elapsed * fps), this.frames.length - 1);
+        const introCount = this.cfg.introCount || 0;
+        const rawIdx = Math.floor(this.elapsed * fps);
+        let idx;
+        if (this.cfg.loop) {
+          const loopStart = introCount;
+          const loopFrames = Math.max(0, this.frames.length - loopStart);
+          if (loopFrames <= 0) {
+            idx = Math.min(rawIdx, this.frames.length - 1);
+          } else if (rawIdx < introCount) {
+            idx = rawIdx;
+          } else {
+            idx = loopStart + ((rawIdx - introCount) % loopFrames);
+          }
+        } else {
+          idx = Math.min(rawIdx, this.frames.length - 1);
+        }
         if (idx !== this.frameIndex) {
           this.frameIndex = idx;
           this._draw();
