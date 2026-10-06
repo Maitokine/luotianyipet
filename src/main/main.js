@@ -13,6 +13,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SMOKE = process.argv.includes('--smoke');
 const SELFTEST = process.argv.includes('--selftest');
 const DUMP = process.argv.includes('--dump-state');
+// 媒体检测诊断：打印每次状态变化及其判定来源通道（smtc / audio）
+const MEDIA_DEBUG = process.argv.includes('--media-debug');
 const patchIdx = process.argv.indexOf('--apply-patch');
 const APPLY = patchIdx > -1 ? process.argv[patchIdx + 1] : null;
 
@@ -114,12 +116,16 @@ if (!gotLock) {
     tray = createTray({ win, store, ipc });
     ipc.onTrayReady(() => tray.rebuild()); // 状态变化（设置写入/UI 上报）后刷新托盘菜单
 
-    // SMTC 系统媒体监听：状态变化推送给渲染层（K8：失败自动禁用跳舞，不影响其他功能）
+    // 系统媒体监听（双通道：SMTC + 音频会话）：
+    // 状态变化推送给渲染层驱动跳舞（K8：失败自动禁用跳舞，不影响其他功能）
     const selfExe = path.basename(process.execPath).replace(/\.exe$/i, '').toLowerCase();
     startMediaWatch({
       selfName: selfExe,
       onStatus: (s) => {
         mediaState.available = s.available !== false;
+        if (SELFTEST || MEDIA_DEBUG) {
+          console.log(`[media] playing=${s.playing ? 1 : 0} available=${s.available ? 1 : 0} via=${s.via || '-'}`);
+        }
         if (ipc) ipc.broadcast('media:status', s);
       },
     });
