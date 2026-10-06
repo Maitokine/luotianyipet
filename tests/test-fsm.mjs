@@ -63,40 +63,48 @@ export function run(t) {
   t.eq(PRIORITY.dance, 3, '跳舞优先级 3');
   t.eq(PRIORITY.physics, 5, '物理优先级 5');
 
-  // ---------- A7 闲逛与折返 ----------
+  // ---------- A7 待机不动 + 走路折返 ----------
   {
     const { fsm, rig, moves } = makeFsm();
     fsm.setGeometry({ workArea: WA });
     fsm.start();
-    t.ok(rig.calls.plays.includes('walk'), 'start 播放 walk 动画');
+    t.ok(rig.calls.plays.includes('idle'), 'start 播放 idle 动画');
+    t.eq(fsm.daily, 'idle', '启动后默认待机');
     const x0 = fsm.winX;
     tickN(fsm, 2);
-    t.close(fsm.winX - x0, WALK_SPEED * 2 * 1, 25, '2 秒后前进约 84px'); // rand=0.5 → walkDir=+1
-    t.ok(moves.length > 60, '闲逛持续移动窗口');
-    // 推到右边界 → 折返（单帧精确断言）
+    t.eq(fsm.winX, x0, '待机时位置不变');
+    // 手动进入 walk 测试折返（rand=0.5 → walkDir=+1）
+    fsm._enterDaily('walk', 10, true);
+    t.eq(fsm.walkDir, 1, '走路方向为 +1');
+    t.ok(rig.calls.plays.includes('walk-right'), '向右走播放 walk-right');
+    tickN(fsm, 2);
+    t.close(fsm.winX - x0, WALK_SPEED * 2, 25, '2 秒后前进约 84px');
+    t.ok(moves.length > 60, '走路持续移动窗口');
+    // 推到右边界 → 折返
     fsm.winX = 1859.8;
     fsm.tick(DT);
     t.eq(fsm.winX, 1860, '右边界钳制（hi = 1920-60）');
     t.eq(fsm.walkDir, -1, '触边后方向反转');
-    t.ok(rig.calls.flips.includes(true), '折返时镜像翻转');
+    t.ok(rig.calls.plays.includes('walk-left'), '折返时播放 walk-left');
+    t.ok(rig.calls.flips.includes(true), '向左走时镜像翻转');
     tickN(fsm, 1);
     t.ok(fsm.winX < 1860, '折返后向左移动');
   }
 
   // ---------- A8 闲置 30s 随机小动作 ----------
   {
-    // rand=0.5 → roll=0.5 → pace
+    // rand=0.5 → roll=0.5 → walk（方向 +1）
     const { fsm, rig } = makeFsm();
     fsm.setGeometry({ workArea: WA });
     fsm.start();
-    t.ok(fsm.pickCooldown > 14 && fsm.pickCooldown < 26, `walk 进入后冷却 15~25s（实际 ${fsm.pickCooldown.toFixed(1)}）`);
+    t.ok(fsm.pickCooldown > 14 && fsm.pickCooldown < 26, `idle 进入后冷却 15~25s（实际 ${fsm.pickCooldown.toFixed(1)}）`);
     tickN(fsm, 29.5);
-    t.eq(fsm.daily, 'walk', '29.5s 时仍在闲逛');
+    t.eq(fsm.daily, 'idle', '29.5s 时仍在待机');
     tickN(fsm, 1);
-    t.eq(fsm.daily, 'pace', '30s 后触发踱步（roll=0.5）');
-    t.ok(rig.calls.plays.includes('walk'), '踱步视觉上映射为 walk');
-    tickN(fsm, 8.5);
-    t.eq(fsm.daily, 'walk', '踱步 8s 后回闲逛');
+    t.eq(fsm.daily, 'walk', '30s 后触发走路（roll=0.5）');
+    t.ok(rig.calls.plays.includes('walk-right'), '向右走播放 walk-right');
+    tickN(fsm, 12);
+    t.eq(fsm.daily, 'idle', '走路结束后回待机');
   }
   {
     // rand=0.2 → roll=0.2 → daze
@@ -108,7 +116,7 @@ export function run(t) {
     t.eq(fsm.daily, 'daze', 'roll=0.2 → 发呆（持续 4+0.2*6≈5.2s）');
     t.ok(rig.calls.plays.includes('idle'), '发呆视觉上映射为 idle');
     tickN(fsm, 5.5);
-    t.eq(fsm.daily, 'walk', '发呆结束后回闲逛');
+    t.eq(fsm.daily, 'idle', '发呆结束后回待机');
   }
   {
     // rand=0.9 → roll=0.9 → hum + 音符特效
@@ -122,7 +130,7 @@ export function run(t) {
     tickN(fsm, 3);
     t.ok(bubble.calls.fxs.filter((k) => k === 'note').length >= 2, '哼唱期间冒音符特效');
     tickN(fsm, 20);
-    t.eq(fsm.daily, 'walk', '哼唱 10+9=19s 后回闲逛');
+    t.eq(fsm.daily, 'idle', '哼唱结束后回待机');
   }
 
   // ---------- A8 冷却期内不重复触发 ----------
@@ -132,9 +140,9 @@ export function run(t) {
     fsm.start();
     fsm.idleSecs = 40; // 已超 30s 阈值
     tickN(fsm, 19);    // 冷却 15+0.5*10=20s
-    t.eq(fsm.daily, 'walk', '冷却期内不触发小动作');
+    t.eq(fsm.daily, 'idle', '冷却期内不触发小动作');
     tickN(fsm, 2);
-    t.eq(fsm.daily, 'pace', '冷却结束且闲置超阈值 → 触发');
+    t.eq(fsm.daily, 'walk', '冷却结束且闲置超阈值 → 触发走路');
   }
 
   // ---------- A8 120 秒睡觉 + ZZZ ----------
@@ -166,7 +174,7 @@ export function run(t) {
     t.eq(fsm.interrupt.type, 'click-react', '进入单击互动打断');
     tickN(fsm, 2.2);
     t.eq(fsm.interrupt, null, '惊醒互动 2s 后结束');
-    t.eq(fsm.daily, 'walk', '醒来回闲逛');
+    t.eq(fsm.daily, 'idle', '醒来回待机');
     t.ok(fsm.idleSecs < 0.5, '互动结束后闲置计时从零重新累计');
   }
 
@@ -190,7 +198,7 @@ export function run(t) {
     t.eq(fsm.daily, 'daze', '恢复发呆');
     t.ok(fsm.actionLeft > 2 && fsm.actionLeft <= 3.1, '恢复剩余时长（≈3s）');
     tickN(fsm, 3.5);
-    t.eq(fsm.daily, 'walk', '发呆自然结束后回闲逛');
+    t.eq(fsm.daily, 'idle', '发呆自然结束后回待机');
     t.ok(bubble.calls.says.length === 0, '无台词库时不冒泡（M3 接入后补充）');
   }
 
@@ -202,7 +210,7 @@ export function run(t) {
     tickN(fsm, 121, 0.5);
     const r = fsm.trigger('dblclick');
     t.eq(r, 'sing-request', '双击返回 sing-request（M4 music 处理）');
-    t.eq(fsm.daily, 'walk', '睡梦中双击 → 惊醒为 walk');
+    t.eq(fsm.daily, 'idle', '睡梦中双击 → 惊醒为待机');
   }
 
   // ---------- A11 拖拽 ----------
@@ -227,7 +235,7 @@ export function run(t) {
     tickN(fsm, 3);
     t.ok(rig.calls.plays.includes('jump'), '落地播放 jump 动画');
     t.eq(fsm.interrupt, null, '落地动画后退出打断');
-    t.eq(fsm.daily, 'walk', '恢复闲逛');
+    t.eq(fsm.daily, 'idle', '恢复待机');
     t.close(fsm.winY, 620, 2, '最终贴地（groundY=620）');
   }
 
@@ -251,7 +259,7 @@ export function run(t) {
     t.close(fsm.winY, 620, 2, '落地贴地');
     tickN(fsm, 1.2);
     t.eq(fsm.interrupt, null, '落地后退出物理打断');
-    t.eq(fsm.daily, 'walk', '恢复闲逛');
+    t.eq(fsm.daily, 'idle', '恢复待机');
   }
 
   // ---------- 优先级 ----------

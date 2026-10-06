@@ -51,6 +51,25 @@ export const ACTIONS = {
       { legL: { rot: -4 }, legR: { rot: 4 }, armL: { rot: 4 }, armR: { rot: -4 }, char: { dy: 0 } },
     ],
   },
+  // 方向化行走：实际渲染由 SpriteLayer 按 walkDir 选择；SVG 作为同名回退
+  'walk-right': {
+    fps: 8, loop: true, friendlyBlink: true,
+    frames: [
+      { legL: { rot: 20 }, legR: { rot: -20 }, armL: { rot: -14 }, armR: { rot: 14 }, char: { dy: -2 }, tailL: { rot: 5 }, tailR: { rot: -5 } },
+      { legL: { rot: 4 }, legR: { rot: -4 }, armL: { rot: -4 }, armR: { rot: 4 }, char: { dy: 0 } },
+      { legL: { rot: -20 }, legR: { rot: 20 }, armL: { rot: 14 }, armR: { rot: -14 }, char: { dy: -2 }, tailL: { rot: -5 }, tailR: { rot: 5 } },
+      { legL: { rot: -4 }, legR: { rot: 4 }, armL: { rot: 4 }, armR: { rot: -4 }, char: { dy: 0 } },
+    ],
+  },
+  'walk-left': {
+    fps: 8, loop: true, friendlyBlink: true,
+    frames: [
+      { legL: { rot: 20 }, legR: { rot: -20 }, armL: { rot: -14 }, armR: { rot: 14 }, char: { dy: -2 }, tailL: { rot: 5 }, tailR: { rot: -5 } },
+      { legL: { rot: 4 }, legR: { rot: -4 }, armL: { rot: -4 }, armR: { rot: 4 }, char: { dy: 0 } },
+      { legL: { rot: -20 }, legR: { rot: 20 }, armL: { rot: 14 }, armR: { rot: -14 }, char: { dy: -2 }, tailL: { rot: -5 }, tailR: { rot: 5 } },
+      { legL: { rot: -4 }, legR: { rot: 4 }, armL: { rot: 4 }, armR: { rot: -4 }, char: { dy: 0 } },
+    ],
+  },
   sit: {
     fps: 1, loop: true, friendlyBlink: true,
     frames: [

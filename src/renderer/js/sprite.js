@@ -4,14 +4,16 @@
 
 // 动作 → 序列帧资源配置。fps 是播放帧率，loop 是否循环。
 export const SPRITE_ACTIONS = {
-  idle:    { fps: 6, loop: true,  dir: '../assets/sprites/idle' },
-  walk:    { fps: 8, loop: true,  dir: '../assets/sprites/walk' },
-  sit:     { fps: 4, loop: true,  dir: '../assets/sprites/sit' },
-  sleep:   { fps: 2, loop: true,  dir: '../assets/sprites/sleep' },
-  sing:    { fps: 6, loop: true,  dir: '../assets/sprites/sing' },
-  dance:   { fps: 8, loop: true,  dir: '../assets/sprites/dance' },
-  grabbed: { fps: 6, loop: true,  dir: '../assets/sprites/grabbed' },
-  jump:    { fps: 8, loop: false, dir: '../assets/sprites/jump' },
+  idle:         { fps: 6, loop: true,  dir: '../assets/sprites/idle' },
+  walk:         { fps: 8, loop: true,  dir: '../assets/sprites/walk' },
+  'walk-right': { fps: 8, loop: true,  dir: '../assets/sprites/walk' },
+  'walk-left':  { fps: 8, loop: true,  dir: '../assets/sprites/walk' },
+  sit:          { fps: 4, loop: true,  dir: '../assets/sprites/sit' },
+  sleep:        { fps: 2, loop: true,  dir: '../assets/sprites/sleep' },
+  sing:         { fps: 6, loop: true,  dir: '../assets/sprites/sing' },
+  dance:        { fps: 8, loop: true,  dir: '../assets/sprites/dance' },
+  grabbed:      { fps: 6, loop: true,  dir: '../assets/sprites/grabbed' },
+  jump:         { fps: 8, loop: false, dir: '../assets/sprites/jump' },
 };
 
 export class SpriteLayer {

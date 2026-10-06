@@ -5,7 +5,7 @@ import {
 import { pointOnCharacter, computeGroundY, clampWalkX } from '../src/renderer/js/geo.js';
 
 const REQUIRED_ACTIONS = [
-  'idle', 'walk', 'sit', 'sleep', 'sing', 'dance', 'grabbed', 'jump',
+  'idle', 'walk', 'walk-right', 'walk-left', 'sit', 'sleep', 'sing', 'dance', 'grabbed', 'jump',
 ];
 
 export async function run(t) {
@@ -13,7 +13,7 @@ export async function run(t) {
   for (const name of REQUIRED_ACTIONS) {
     t.ok(ACTIONS[name] != null, `动作存在：${name}`);
   }
-  t.eq(ACTION_NAMES.length, REQUIRED_ACTIONS.length, '动作总数 = 19，无多余');
+  t.eq(ACTION_NAMES.length, REQUIRED_ACTIONS.length, '动作总数 = 10，无多余');
 
   // 2. 每个动作定义合法
   for (const [name, a] of Object.entries(ACTIONS)) {

@@ -7,8 +7,9 @@ export const IDLE_PICK_AFTER = 30;   // 闲置 30 秒后随机切日常小动作
 export const SLEEP_AFTER = 120;      // 2 分钟无操作 → 睡觉
 export const CLICK_REACT_MS = 2000;  // 单击互动时长
 export const NOTIFY_MS = 5000;       // 系统提醒气泡时长
-export const WALK_SPEED = 42;        // 闲逛速度 px/s
-export const PACE_RANGE = 26;        // 踱步半径
+export const WALK_SPEED = 42;        // 走路速度 px/s
+export const WALK_DURATION_BASE = 8; // 一次临时走路持续时长（秒）
+export const WALK_DURATION_VAR = 6;
 
 // 打断优先级（高抢占低）
 export const PRIORITY = { physics: 5, grabbed: 5, sing: 4, dance: 3, 'click-react': 2, notify: 1 };
@@ -28,7 +29,7 @@ export class Fsm {
     // 唱歌被更高优先级打断（拖拽/抛掷）时通知 music 模块停音频（否则音频会在 fsm 已退出唱歌态后继续播）
     this.onSingInterrupted = deps.onSingInterrupted || null;
 
-    this.daily = 'walk';            // walk/daze/pace/hum/sleep/sit；daze/pace/hum 视觉上映射为 idle/walk
+    this.daily = 'idle';            // idle/walk/daze/hum/sleep/sit；daze/hum 视觉上映射为 idle
     this.interrupt = null;          // { type, data, elapsed }
     this.idleSecs = 0;              // 距上次用户互动
     this.dailySecs = 0;             // 当前日常状态持续
@@ -43,7 +44,6 @@ export class Fsm {
     this.winW = 300;
     this.winH = 420;
     this.walkDir = this.rand() < 0.5 ? -1 : 1;
-    this.paceAnchor = 0;
     this._fxAcc = 0;
     this._resume = null;            // 打断前日常快照
     this._raf = null;
@@ -72,7 +72,7 @@ export class Fsm {
   start() {
     if (this._running) return;
     this._running = true;
-    this._enterDaily('walk');
+    this._enterDaily('idle');
     const loop = (ts) => {
       if (this._lastTs == null) this._lastTs = ts;
       const dt = Math.min(0.05, (ts - this._lastTs) / 1000);
@@ -103,31 +103,28 @@ export class Fsm {
 
   _tickDaily(dt) {
     switch (this.daily) {
-      case 'walk': {
-        this.winX += this.walkDir * WALK_SPEED * dt;
-        this._clampAndMove();
+      case 'idle': {
         if (this.pickCooldown > 0) this.pickCooldown -= dt;
         else if (this.idleSecs >= IDLE_PICK_AFTER) this._pickIdleBehavior();
         break;
       }
+      case 'walk': {
+        this.winX += this.walkDir * WALK_SPEED * dt;
+        this._clampAndMove();
+        this.actionLeft -= dt;
+        if (this.actionLeft <= 0) this._enterDaily('idle');
+        break;
+      }
       case 'daze': {
         this.actionLeft -= dt;
-        if (this.actionLeft <= 0) this._enterDaily('walk');
+        if (this.actionLeft <= 0) this._enterDaily('idle');
         break;
       }
       case 'hum': {
         this.actionLeft -= dt;
         this._fxAcc += dt;
         if (this._fxAcc >= 0.8) { this._fxAcc = 0; this.bubble?.fx('note'); }
-        if (this.actionLeft <= 0) this._enterDaily('walk');
-        break;
-      }
-      case 'pace': {
-        this.actionLeft -= dt;
-        const target = this.paceAnchor + Math.sin(this.dailySecs * 2.2) * PACE_RANGE;
-        this.winX = clampWalkX(target, this.workArea, this.winW);
-        this._moveNow();
-        if (this.actionLeft <= 0) this._enterDaily('walk');
+        if (this.actionLeft <= 0) this._enterDaily('idle');
         break;
       }
       case 'sleep': {
@@ -147,40 +144,46 @@ export class Fsm {
   _pickIdleBehavior() {
     const roll = this.rand();
     if (roll < 0.4) this._enterDaily('daze', 4 + this.rand() * 6);
-    else if (roll < 0.7) this._enterDaily('pace', 8);
+    else if (roll < 0.7) this._enterDaily('walk', WALK_DURATION_BASE + this.rand() * WALK_DURATION_VAR, true);
     else this._enterDaily('hum', 10 + this.rand() * 10);
   }
 
-  _enterDaily(name, duration = 0) {
+  _enterDaily(name, duration = 0, pickNewDir = false) {
     const changed = name !== this.daily;
     this.daily = name;
     this.dailySecs = 0;
     this.actionLeft = duration;
     this._fxAcc = 0;
-    if (!changed && name !== 'walk') return; // 恢复同名状态不重播动画
     switch (name) {
-      case 'walk':
+      case 'idle':
         this.pickCooldown = 15 + this.rand() * 10;
-        this.rig?.play('walk');
+        this.rig?.play('idle');
+        this.rig?.setFlip(false);
+        break;
+      case 'walk': {
+        if (pickNewDir) this.walkDir = this.rand() < 0.5 ? -1 : 1;
+        const anim = this.walkDir > 0 ? 'walk-right' : 'walk-left';
+        this.rig?.play(anim);
         this.rig?.setFlip(this.walkDir < 0);
         break;
+      }
       case 'daze':
         this.rig?.play('idle');
-        break;
-      case 'pace':
-        this.rig?.play('walk');
-        this.paceAnchor = this.winX;
+        this.rig?.setFlip(false);
         break;
       case 'hum':
         this.rig?.play('idle');
+        this.rig?.setFlip(false);
         this._sayScene('hum-start');
         break;
       case 'sleep':
         this.rig?.play('sleep');
+        this.rig?.setFlip(false);
         this._sayScene('sleep-start');
         break;
       case 'sit':
         this.rig?.play('sit');
+        this.rig?.setFlip(false);
         break;
       default:
         break;
@@ -288,7 +291,7 @@ export class Fsm {
         this.growth?.onPetClick?.(); // A13：单击经验/好感（growth 内部做 10s 去重与日上限）
         if (wasSleeping) {
           // 惊醒（A9）：闹小脾气
-          this.daily = 'walk';
+          this.daily = 'idle';
           this._enterInterrupt('click-react');
           this.rig?.play('jump');
           this._sayScene('wake');
@@ -408,7 +411,7 @@ export class Fsm {
 
   _wakeIfSleeping() {
     if (this.daily === 'sleep') {
-      this.daily = 'walk';
+      this.daily = 'idle';
       this._sayScene('wake');
     }
   }
@@ -435,8 +438,15 @@ export class Fsm {
     if (clamped !== this.winX) {
       this.winX = clamped;
       this.walkDir *= -1; // 到边缘折返（A7）
+      const anim = this.walkDir > 0 ? 'walk-right' : 'walk-left';
+      this.rig?.play(anim);
+      this.rig?.setFlip(this.walkDir < 0);
+    } else if (this.daily === 'walk') {
+      // 持续播放当前方向动画，确保朝向与移动方向一致
+      const anim = this.walkDir > 0 ? 'walk-right' : 'walk-left';
+      if (this.rig && this.rig.action !== anim) this.rig.play(anim);
+      this.rig?.setFlip(this.walkDir < 0);
     }
-    this.rig?.setFlip(this.walkDir < 0);
     this._moveNow();
   }
 
