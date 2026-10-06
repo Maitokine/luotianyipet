@@ -77,6 +77,7 @@ export function run(t) {
     fsm._enterDaily('walk', 10, true);
     t.eq(fsm.walkDir, 1, '走路方向为 +1');
     t.ok(rig.calls.plays.includes('walk-right'), '向右走播放 walk-right');
+    t.eq(rig.calls.flips[rig.calls.flips.length - 1], true, '向右走翻转（脸朝右）');
     tickN(fsm, 2);
     t.close(fsm.winX - x0, WALK_SPEED * 2, 25, '2 秒后前进约 84px');
     t.ok(moves.length > 60, '走路持续移动窗口');
@@ -86,7 +87,7 @@ export function run(t) {
     t.eq(fsm.winX, 1860, '右边界钳制（hi = 1920-60）');
     t.eq(fsm.walkDir, -1, '触边后方向反转');
     t.ok(rig.calls.plays.includes('walk-left'), '折返时播放 walk-left');
-    t.ok(rig.calls.flips.includes(true), '向左走时镜像翻转');
+    t.eq(rig.calls.flips[rig.calls.flips.length - 1], false, '向左走不翻转（脸朝左）');
     tickN(fsm, 1);
     t.ok(fsm.winX < 1860, '折返后向左移动');
   }

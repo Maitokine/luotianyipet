@@ -169,6 +169,9 @@ async function main() {
       case 'win.click-through':
         api.setState({ settings: { clickThrough: !current.settings.clickThrough } });
         break;
+      case 'win.game-mode':
+        api.setState({ settings: { gameMode: !current.settings.gameMode } });
+        break;
       case 'pet.size':
         if (Number.isFinite(payload.scale)) api.setState({ settings: { scale: payload.scale } });
         break;
@@ -206,12 +209,22 @@ async function main() {
 
   window.addEventListener('contextmenu', (e) => {
     e.preventDefault();
+    const onMenu = menu.contains(e.target);
+    const onChar = charEl && (charEl === e.target || charEl.contains(e.target));
+    // 点在菜单内部：忽略，保持菜单展开状态
+    if (onMenu) return;
+    // 点在角色外空白处：关闭菜单；不再重开（原菜单消失）
+    if (!onChar) { menu.close(); return; }
+    // 点在角色上：打开/重定位右键菜单（菜单外 mousedown 已先关闭旧菜单）
     const model = buildMenuModel({
       state: current,
       flags: { singing: fsm.singing, pomoPhase: reminders.pomodoro.phase },
     });
     menu.open(model, e.clientX, e.clientY);
   });
+
+  // 窗口失焦（点到其他应用/桌面）时关闭菜单，避免菜单悬挂
+  api.onMenuClose(() => menu.close());
 
   // 状态同步：成长数值 / 换装 / 窗口设置 / 跳舞开关 / 提醒配置与便签
   api.onStateChanged((s) => {

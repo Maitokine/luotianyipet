@@ -20,13 +20,14 @@ export class WindowCtl {
     this.scale = state.settings.scale;
     this.opacity = state.settings.opacity;
     this.clickThrough = Boolean(state.settings.clickThrough);
+    this.gameMode = Boolean(state.settings.gameMode);
 
     this._applyScale();
     this._applyOpacity();
     this.api.setAlwaysOnTop(state.settings.alwaysOnTop);
-    if (this.clickThrough) {
-      this.api.setIgnoreMouse(true);
-    }
+    // 穿透模式必须显式通知主进程忽略鼠标；游戏模式则交给 _updateInteractive 强制可交互
+    if (this.clickThrough && !this.gameMode) this.api.setIgnoreMouse(true);
+    this._updateInteractive(this._desired());
 
     window.addEventListener('mousemove', (e) => this._onMouseMove(e), { passive: true });
     window.addEventListener('wheel', (e) => this._onWheel(e), { passive: false });
@@ -39,12 +40,13 @@ export class WindowCtl {
     if (s.opacity !== this.opacity) { this.opacity = s.opacity; this._applyOpacity(); }
     this.api.setAlwaysOnTop(s.alwaysOnTop);
     // 穿透开关（菜单/设置页切换）：开启=强制全窗穿透；关闭=恢复动态命中
+    // 游戏模式：强制整窗可交互，覆盖穿透态，用于游戏/全屏场景下无法悬停命中时仍可操作小人
     const ct = Boolean(s.clickThrough);
-    if (ct !== this.clickThrough) {
-      this.clickThrough = ct;
-      if (ct) this.api.setIgnoreMouse(true);
-      else this._updateInteractive(this._desired());
-    }
+    const gm = Boolean(s.gameMode);
+    const changed = ct !== this.clickThrough || gm !== this.gameMode;
+    this.clickThrough = ct;
+    this.gameMode = gm;
+    if (changed) this._updateInteractive(this._desired());
   }
 
   setMenuOpen(v) {
@@ -65,9 +67,9 @@ export class WindowCtl {
     this._updateInteractive(this._desired());
   }
 
-  // 当前期望的可交互状态：拖拽 / 悬停命中 / 菜单打开 任一为真
+  // 当前期望的可交互状态：拖拽 / 悬停命中 / 菜单打开 / 游戏模式 任一为真
   _desired() {
-    return this.dragActive || this._hoverHit || this.menuOpen;
+    return this.dragActive || this._hoverHit || this.menuOpen || this.gameMode;
   }
 
   _hitTest(e) {
@@ -79,7 +81,8 @@ export class WindowCtl {
   }
 
   _updateInteractive(want) {
-    if (this.clickThrough) want = false; // 穿透模式：永远不可交互（仅菜单/托盘可关闭）
+    // 游戏模式强制可交互，覆盖穿透态；否则穿透模式永远不可交互
+    if (this.clickThrough && !this.gameMode) want = false;
     if (this.interactive === want) return;
     this.interactive = want;
     this.api.setIgnoreMouse(!want);

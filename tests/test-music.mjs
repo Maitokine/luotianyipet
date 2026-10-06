@@ -68,7 +68,7 @@ function fakeAudio() {
   };
 }
 
-function setup({ pickResult, lyricResult, allowBegin = true, humMs = HUM_MS } = {}) {
+function setup({ pickResult, lyricResult, allowBegin = true, humMs = HUM_MS, lyricPollMs } = {}) {
   const fsm = fakeFsm({ allowBegin });
   const bubble = fakeBubble();
   const growth = fakeGrowth();
@@ -83,6 +83,7 @@ function setup({ pickResult, lyricResult, allowBegin = true, humMs = HUM_MS } = 
     api, fsm, bubble, growth, dialogue,
     createAudio: (url) => { const a = fakeAudio(); a.url = url; audios.push(a); return a; },
     humMs,
+    ...(lyricPollMs != null ? { lyricPollMs } : {}),
   });
   return { music, fsm, bubble, growth, dialogue, api, audios };
 }
@@ -221,6 +222,84 @@ export async function run(t) {
     await sleep(10); // 等歌词加载微任务
     t.ok(bubble.lyrics.some((l) => l.text === '♪ 测试歌 ♪'), '空歌词显示歌名条');
     t.ok(bubble.lyrics.every((l) => l.text !== '♪ ～'), '不再显示无信息量的 "♪ ～"');
+  }
+
+  // ---- 歌词兜底轮询：timeupdate 缺失/稀疏时仍能按 currentTime 推进 ----
+  {
+    const { music, bubble, audios } = setup({ lyricPollMs: 15 });
+    await music.toggle();
+    await sleep(10);
+    const a = audios[0];
+    a.currentTime = 15;      // 只推进时间，不 emit timeupdate
+    await sleep(50);
+    t.eq(bubble.lyrics[bubble.lyrics.length - 1].text, '第一句', '无 timeupdate 时兜底轮询推进歌词');
+    a.currentTime = 25;
+    await sleep(50);
+    t.eq(bubble.lyrics[bubble.lyrics.length - 1].text, '第二句', '兜底轮询继续推进到下一句');
+    music.stopSing();
+    t.eq(music._lyricTimer, null, '停止唱歌后清理兜底轮询计时器');
+  }
+
+  // ---- 前奏（尚未到首句时间）显示歌名占位，而非空白/陈旧内容 ----
+  {
+    const { music, bubble, audios } = setup({ lyricPollMs: 15 });
+    await music.toggle();
+    await sleep(10);
+    audios[0].currentTime = 2; // 首句在 10s，当前处于前奏
+    await sleep(50);
+    t.ok(bubble.lyrics.some((l) => l.text === '♪ 测试歌 ♪'), '前奏显示歌名占位，歌词条不空白');
+    music.stopSing();
+  }
+
+  // ---- 歌词尚未加载时先显示歌名占位，加载完成后正常显示 ----
+  {
+    let resolveLyric;
+    const pendingLyric = new Promise((r) => { resolveLyric = r; });
+    const fsm = fakeFsm();
+    const bubble = fakeBubble();
+    const audios = [];
+    const api = {
+      pickSong: async () => ({ source: 'netease', song: { id: 7, name: '慢加载' } }),
+      getLyric: () => pendingLyric,
+    };
+    const music = new Music({
+      api, fsm, bubble, growth: fakeGrowth(), dialogue: fakeDialogue(),
+      createAudio: (url) => { const a = fakeAudio(); a.url = url; audios.push(a); return a; },
+      lyricPollMs: 15,
+    });
+    await music.toggle();
+    audios[0].currentTime = 3;
+    await sleep(50);
+    t.ok(bubble.lyrics.some((l) => l.text === '♪ 慢加载 ♪'), '歌词未就绪时先显示歌名占位');
+    resolveLyric({ ok: true, lrc: '[00:01.00]来了' });
+    await sleep(60);
+    t.eq(bubble.lyrics[bubble.lyrics.length - 1].text, '来了', '歌词到达后正常显示');
+    music.stopSing();
+  }
+
+  // ---- 切歌/结束后到达的过期歌词结果被丢弃（令牌防串词）----
+  {
+    let releaseLyric;
+    const staleLyric = new Promise((r) => { releaseLyric = r; });
+    const fsm = fakeFsm();
+    const bubble = fakeBubble();
+    const audios = [];
+    const api = {
+      pickSong: async () => ({ source: 'netease', song: { id: 1, name: '过期歌' } }),
+      getLyric: () => staleLyric,
+    };
+    const music = new Music({
+      api, fsm, bubble, growth: fakeGrowth(), dialogue: fakeDialogue(),
+      createAudio: (url) => { const a = fakeAudio(); a.url = url; audios.push(a); return a; },
+      lyricPollMs: 15,
+    });
+    await music.toggle();
+    music.stopSing(); // 结束后才拿到歌词
+    t.eq(music.sync, null, '停止后歌词已清空');
+    releaseLyric({ ok: true, lrc: '[00:01.00]迟到的词' });
+    await sleep(20);
+    t.eq(music.sync, null, '过期歌词加载结果被丢弃，不写回');
+    t.eq(music._lyricTimer, null, '结束后无残留轮询计时器');
   }
 
   // ---- 真机修复回归：fsm 打断唱歌后音频残留 → onSingInterrupted 立即停 ----

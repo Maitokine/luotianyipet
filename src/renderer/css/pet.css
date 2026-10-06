@@ -22,41 +22,51 @@ html, body {
 
 .hidden { display: none !important; }
 
-/* ---------- 台词气泡 ---------- */
+/* ---------- 台词气泡 ----------
+   默认紧贴角色头顶正上方（居中，尾巴垂直向下指向头顶）。
+   唱歌时歌词条占据窗口中部，气泡靠 #stage.lyric-on 自动上移一层让位，
+   两者始终不重叠。 */
 #bubble {
   position: absolute;
-  bottom: 230px;
+  bottom: 214px;
   left: 50%;
   transform: translateX(-50%);
-  max-width: 260px;
-  padding: 8px 14px;
+  max-width: 240px;
+  padding: 7px 12px;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 12px;
   color: #2c2c2a;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   text-align: center;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10);
   z-index: 20;
-  animation: bubble-in 0.18s ease-out;
+  animation: say-in 0.18s ease-out;
+  transition: bottom 0.22s ease-out;
 }
 #bubble::after {
   content: "";
   position: absolute;
   bottom: -7px;
   left: 50%;
-  transform: translateX(-50%);
+  margin-left: -7px;
   border: 7px solid transparent;
   border-top-color: #ffffff;
   border-bottom: 0;
 }
-@keyframes bubble-in {
+/* 歌词条显示时（歌唱中）：气泡上移到歌词条上方，避免遮挡歌词 */
+#stage.lyric-on #bubble { bottom: 290px; }
+@keyframes say-in {
   from { opacity: 0; transform: translateX(-50%) translateY(6px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 /* ---------- 歌词条 ---------- */
+@keyframes bubble-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
 #lyric {
   position: absolute;
   bottom: 236px;
@@ -80,11 +90,12 @@ html, body {
 }
 #lyric.note-fx::before { content: "♪ "; color: #9fe1cb; }
 
-/* ---------- 番茄钟徽章 ---------- */
+/* ---------- 番茄钟徽章 ----------
+   移到右上角：台词气泡现在占据角色头顶上方区域，徽章放这里不会被压住 */
 #badge {
   position: absolute;
-  bottom: 208px;
-  right: 40px;
+  top: 8px;
+  right: 8px;
   padding: 4px 12px;
   background: #faeeda;
   border: 1px solid #ef9f27;

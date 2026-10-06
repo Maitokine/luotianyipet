@@ -250,6 +250,7 @@ function renderGeneral() {
   $('s-autostart').checked = Boolean(s.autoStart);
   $('s-ontop').checked = Boolean(s.alwaysOnTop);
   $('s-clickthrough').checked = Boolean(s.clickThrough);
+  $('s-gamemode').checked = Boolean(s.gameMode);
   $('s-idlesing').checked = Boolean(s.idleRealSing);
   $('s-dance').checked = Boolean(s.danceWithMusic);
   $('s-dance').disabled = !danceAvailable;
@@ -299,6 +300,7 @@ function bindControls() {
   $('s-autostart').addEventListener('change', (e) => sendAction('app.autostart', { enabled: e.target.checked }));
   $('s-ontop').addEventListener('change', (e) => setSetting({ alwaysOnTop: e.target.checked }));
   $('s-clickthrough').addEventListener('change', (e) => setSetting({ clickThrough: e.target.checked }));
+  $('s-gamemode').addEventListener('change', (e) => setSetting({ gameMode: e.target.checked }));
   $('s-idlesing').addEventListener('change', (e) => setSetting({ idleRealSing: e.target.checked }));
   $('s-dance').addEventListener('change', (e) => setSetting({ danceWithMusic: e.target.checked }));
   for (const btn of document.querySelectorAll('#s-size-row .size-btn')) {

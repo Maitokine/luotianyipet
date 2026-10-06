@@ -5,6 +5,9 @@ import { parseLrc, LyricSync } from '../../shared/lrc.js';
 export const REWARD_RATIO = 0.6;   // 播放 ≥60% 视为听完（PRD §5.5）
 export const HUM_MS = 20000;       // 哼唱模式时长
 export const IDLE_SING_CHANCE = 0.15; // 闲逛哼唱时触发真唱的概率（每 5s 判定一次）
+// 歌词轮询兜底周期：timeupdate 在部分流媒体/后台节流场景下会稀疏甚至缺失，
+// 仅靠它会让歌词"卡住不动"；此处额外定时按 currentTime 推进，双保险。
+export const LYRIC_POLL_MS = 250;
 
 // 闲逛随机真唱判定（PRD §3.3 通用页开关，默认关）：仅在哼唱日常态且不忙时可触发
 export function idleSingChance({
@@ -22,6 +25,7 @@ export class Music {
     rand = Math.random,
     createAudio = null,
     humMs = HUM_MS,
+    lyricPollMs = LYRIC_POLL_MS,
   } = {}) {
     this.api = api;
     this.fsm = fsm;
@@ -31,6 +35,7 @@ export class Music {
     this.rand = rand;
     this.createAudio = createAudio || ((url) => new Audio(url));
     this.humMs = humMs;
+    this.lyricPollMs = lyricPollMs;
 
     this.audio = null;
     this.sync = null;
@@ -39,6 +44,9 @@ export class Music {
     this._busy = false;
     this._humTimer = null;
     this._maxRatio = 0;
+    this._lyricTimer = null;   // 歌词轮询兜底计时器
+    this._lastLine = null;     // 上次显示的歌词行（段落间隙时保持显示）
+    this._token = 0;           // 歌曲令牌：丢弃切歌后到达的过期歌词结果
   }
 
   get singing() { return this.fsm.singing; }
@@ -87,17 +95,20 @@ export class Music {
       this.song = r.song;
       this.source = r.source;
       this._maxRatio = 0;
+      this.sync = null;      // 清掉上一首的歌词，避免新歌前奏期间显示旧词
+      this._lastLine = null;
       this._sayScene('sing-start');
 
       const url = `https://music.163.com/song/media/outer/url?id=${r.song.id}.mp3`;
       const audio = this.createAudio(url);
       audio.addEventListener('ended', () => this._onEnded());
       audio.addEventListener('error', () => this._onError());
-      audio.addEventListener('timeupdate', () => this._onTimeUpdate(audio));
+      audio.addEventListener('timeupdate', () => this._syncLyric());
       this.audio = audio;
       const p = audio.play();
       if (p && p.catch) p.catch(() => this._onError()); // 自动播放失败 → 哼唱
       this._loadLyric(r.song.id);
+      this._startLyricPoll(); // 歌词兜底轮询（timeupdate 缺失时仍能推进）
     } catch {
       this._startHum();
     } finally {
@@ -106,12 +117,15 @@ export class Music {
   }
 
   async _loadLyric(songId) {
+    const token = ++this._token;
     let lines = [];
     try {
       const r = await this.api.getLyric(songId);
       if (r && r.ok && r.lrc) lines = parseLrc(r.lrc);
     } catch { /* 歌词失败不影响演唱 */ }
+    if (token !== this._token) return; // 已切歌 / 已结束 → 丢弃过期结果
     this.sync = new LyricSync(lines);
+    this._lastLine = null;
     if (lines.length === 0 && this.fsm.singing) {
       // 无歌词（纯音乐/拿取失败）：显示歌名而非干巴巴的"♪ ～"
       const name = this.song ? this.song.name : '';
@@ -119,12 +133,39 @@ export class Music {
     }
   }
 
-  _onTimeUpdate(audio) {
+  // ---------- 歌词推进（timeupdate 与轮询兜底共用） ----------
+  _startLyricPoll() {
+    this._stopLyricPoll();
+    if (typeof setInterval !== 'function') return;
+    this._lyricTimer = setInterval(() => this._syncLyric(), this.lyricPollMs);
+    // Node 测试环境：不要让兜底计时器阻止进程退出（浏览器下返回数字，无 unref）
+    if (this._lyricTimer && typeof this._lyricTimer.unref === 'function') this._lyricTimer.unref();
+  }
+
+  _stopLyricPoll() {
+    if (this._lyricTimer) {
+      try { clearInterval(this._lyricTimer); } catch { /* ignore */ }
+      this._lyricTimer = null;
+    }
+  }
+
+  _syncLyric() {
     if (!this.fsm.singing) return;
-    const dur = audio.duration || 0;
+    const audio = this.audio;
+    if (!audio) return; // 哼唱模式 / 已结束：无音频可同步
     const cur = audio.currentTime || 0;
-    if (dur > 0) this._maxRatio = Math.max(this._maxRatio, cur / dur);
-    const line = this.sync ? this.sync.at(cur) : null;
+    const dur = audio.duration || 0;
+    if (Number.isFinite(dur) && dur > 0) this._maxRatio = Math.max(this._maxRatio, cur / dur);
+    let line = this.sync ? this.sync.at(cur) : null;
+    if (line == null) {
+      // 前奏 / 段落间隙 / 歌词尚未加载：保持上一句（或先显示歌名），
+      // 避免歌词条长时间停在空白/陈旧内容上看起来"不动"
+      line = this._lastLine != null
+        ? this._lastLine
+        : (this.song && this.song.name ? `♪ ${this.song.name} ♪` : null);
+    } else {
+      this._lastLine = line;
+    }
     if (line != null) this.bubble.lyric(line, this._songLabel());
   }
 
@@ -143,6 +184,7 @@ export class Music {
   _startHum() {
     this.fsm.trigger('dblclick');
     if (!this.fsm.beginSing()) return;
+    this._stopLyricPoll(); // 哼唱无音频，无需轮询
     this.source = 'hum';
     this.song = { id: 0, name: '哼唱' };
     this._sayScene('sing-start');
@@ -159,6 +201,8 @@ export class Music {
   }
 
   _finish(completed) {
+    this._token += 1; // 使在途的歌词加载失效，防止结束后被写回
+    this._stopLyricPoll();
     if (this._humTimer) { clearTimeout(this._humTimer); this._humTimer = null; }
     this._teardownAudio();
     this.bubble.hideLyric();
@@ -169,11 +213,13 @@ export class Music {
     this.song = null;
     this.source = null;
     this.sync = null;
+    this._lastLine = null;
     this._maxRatio = 0;
     this.fsm.endSing(); // → fsm.onSingEnd → dance.singEnded()（A22 唱完接跳舞）
   }
 
   _teardownAudio() {
+    this._stopLyricPoll();
     if (this.audio) {
       try { this.audio.pause(); } catch { /* ignore */ }
       try { this.audio.src = ''; } catch { /* ignore */ }

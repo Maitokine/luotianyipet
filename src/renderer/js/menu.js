@@ -138,6 +138,10 @@ export class HtmlMenu {
     this._openNodes = [];
   }
 
+  contains(target) {
+    return this.el ? this._contains(this.el, target) : false;
+  }
+
   _contains(root, target) {
     let n = target;
     while (n) {

@@ -8,6 +8,7 @@ class FakeEl {
     this._text = '';
     this.children = [];
     this.style = {};
+    this.parentElement = null;
   }
   get classList() {
     const self = this;
@@ -30,9 +31,10 @@ class FakeEl {
 
 function fakeDoc() {
   const els = new Map();
-  for (const id of ['bubble', 'lyric', 'lyric-text', 'lyric-song', 'badge', 'fx']) {
+  for (const id of ['stage', 'bubble', 'lyric', 'lyric-text', 'lyric-song', 'badge', 'fx']) {
     els.set(id, new FakeEl(id));
   }
+  els.get('lyric').parentElement = els.get('stage'); // 真实 DOM 中 #lyric 的父节点即 #stage
   return {
     getElementById: (id) => els.get(id) || null,
     createElement: (tag) => new FakeEl(tag),
@@ -116,6 +118,29 @@ export function run(t) {
     t.eq(el('lyric-song').textContent, '洛天依 - 普通DISCO', 'lyric 设置歌名');
     bubble.hideLyric();
     t.ok(el('lyric').classList.contains('hidden'), 'hideLyric 隐藏歌词条');
+  }
+  {
+    // 布局联动：歌词条显示时给 #stage 打 lyric-on，让气泡上移避开歌词
+    const { bubble, el } = setup();
+    t.ok(!el('stage').classList.contains('lyric-on'), '初始未标记 lyric-on');
+    bubble.lyric('第一句', '歌名');
+    t.ok(el('stage').classList.contains('lyric-on'), 'lyric 显示时标记 lyric-on（气泡让位）');
+    bubble.say('点击台词', 4000);
+    t.ok(el('stage').classList.contains('lyric-on'), '气泡出现不影响 lyric-on 标记');
+    bubble.hideLyric();
+    t.ok(!el('stage').classList.contains('lyric-on'), 'hideLyric 清除 lyric-on');
+  }
+  {
+    // 容错：歌词条没有父节点（极端/假 DOM）时不得抛错
+    const lyric = new FakeEl('lyric');
+    const doc = {
+      getElementById: (id) => (id === 'lyric' ? lyric : null),
+      createElement: (tag) => new FakeEl(tag),
+    };
+    const bubble = new Bubble({ doc, timer: fakeTimer() });
+    let threw = false;
+    try { bubble.lyric('孤立的歌词'); bubble.hideLyric(); } catch { threw = true; }
+    t.ok(!threw, '无父节点时 lyric/hideLyric 不抛错');
   }
 
   // ---- 徽章 ----

@@ -105,6 +105,24 @@ export async function run(t) {
     t.eq(ctl.interactive, false, '穿透模式下菜单打开也不可交互（pet.js 会直接关菜单兜底）');
   }
 
+  // ---- 游戏模式：强制整窗可交互，覆盖穿透态 ----
+  {
+    const { ctl, calls, dom } = makeEnv({ clickThrough: true });
+    t.eq(ctl.interactive, false, '穿透模式初始不可交互');
+    ctl.sync({ settings: { scale: 1, opacity: 1, alwaysOnTop: true, clickThrough: true, gameMode: true } });
+    t.eq(ctl.interactive, true, '开启游戏模式后强制可交互');
+    t.ok(calls.ignore.includes(false), '已向主进程取消鼠标穿透');
+    ctl.sync({ settings: { scale: 1, opacity: 1, alwaysOnTop: true, clickThrough: true, gameMode: false } });
+    t.eq(ctl.interactive, false, '关闭游戏模式后恢复穿透态');
+  }
+  {
+    // 游戏模式下即使鼠标移出角色/无菜单仍保持可交互
+    const { ctl, dom } = makeEnv({ clickThrough: false });
+    ctl.sync({ settings: { scale: 1, opacity: 1, alwaysOnTop: true, clickThrough: false, gameMode: true } });
+    dom.dispatch('mousemove', MISS);
+    t.eq(ctl.interactive, true, '游戏模式下透明区仍保持可交互');
+  }
+
   // ---- sync 关闭穿透恢复动态命中 ----
   {
     const { ctl, calls, dom } = makeEnv({ clickThrough: true });

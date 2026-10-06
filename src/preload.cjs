@@ -20,6 +20,8 @@ contextBridge.exposeInMainWorld('petApi', {
   onUiState: (cb) => ipcRenderer.on('ui:state', (_e, s) => cb(s)),
   // 设置窗口页签切换指令（openSettings 指定页签）
   onSettingsTab: (cb) => ipcRenderer.on('settings:tab', (_e, tab) => cb(tab)),
+  // 主进程通知渲染层关闭菜单（窗口失焦时广播）
+  onMenuClose: (cb) => ipcRenderer.on('ui:close-menu', (_e) => cb()),
   // 应用信息（数据目录/跳舞可用性/自启状态，设置窗口用）
   getAppInfo: () => ipcRenderer.invoke('app:info'),
   // 应用

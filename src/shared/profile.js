@@ -50,6 +50,7 @@ export function defaultProfile() {
     settings: {
       alwaysOnTop: true,
       clickThrough: false,
+      gameMode: false,
       scale: 1.0,
       opacity: 1.0,
       autoStart: false,
@@ -112,7 +113,7 @@ export function validate(p) {
   s.water.minutes = clamp(Math.floor(Number(s.water.minutes) || 90), 10, 240);
   s.pomodoro.focus = clamp(Math.floor(Number(s.pomodoro.focus) || 25), 5, 60);
   s.pomodoro.rest = clamp(Math.floor(Number(s.pomodoro.rest) || 5), 1, 30);
-  for (const b of ['alwaysOnTop', 'clickThrough', 'autoStart', 'idleRealSing', 'danceWithMusic']) {
+  for (const b of ['alwaysOnTop', 'clickThrough', 'gameMode', 'autoStart', 'idleRealSing', 'danceWithMusic']) {
     s[b] = Boolean(s[b]);
   }
   if (!Array.isArray(p.notes)) p.notes = [];

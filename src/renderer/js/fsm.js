@@ -164,7 +164,7 @@ export class Fsm {
         if (pickNewDir) this.walkDir = this.rand() < 0.5 ? -1 : 1;
         const anim = this.walkDir > 0 ? 'walk-right' : 'walk-left';
         this.rig?.play(anim);
-        this.rig?.setFlip(this.walkDir < 0);
+        this.rig?.setFlip(this.walkDir > 0);
         break;
       }
       case 'daze':
@@ -440,12 +440,12 @@ export class Fsm {
       this.walkDir *= -1; // 到边缘折返（A7）
       const anim = this.walkDir > 0 ? 'walk-right' : 'walk-left';
       this.rig?.play(anim);
-      this.rig?.setFlip(this.walkDir < 0);
+      this.rig?.setFlip(this.walkDir > 0);
     } else if (this.daily === 'walk') {
       // 持续播放当前方向动画，确保朝向与移动方向一致
       const anim = this.walkDir > 0 ? 'walk-right' : 'walk-left';
       if (this.rig && this.rig.action !== anim) this.rig.play(anim);
-      this.rig?.setFlip(this.walkDir < 0);
+      this.rig?.setFlip(this.walkDir > 0);
     }
     this._moveNow();
   }

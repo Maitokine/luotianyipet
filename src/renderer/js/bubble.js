@@ -51,10 +51,19 @@ export class Bubble {
     if (this.el.lyricText) this.el.lyricText.textContent = String(text || '');
     if (this.el.lyricSong) this.el.lyricSong.textContent = String(song || '');
     el.classList.remove('hidden');
+    // 歌词条占据窗口中部，给 #stage 打标记 → CSS 把台词气泡上移一层避开它
+    this._stageClass(el, 'add');
   }
 
   hideLyric() {
     this.el.lyric?.classList.add('hidden');
+    this._stageClass(this.el.lyric, 'remove');
+  }
+
+  // 歌词条的父节点（真实 DOM 里即 #stage）；假 DOM 无父节点时静默跳过
+  _stageClass(el, op) {
+    const stage = el && el.parentElement;
+    if (stage && stage.classList) stage.classList[op]('lyric-on');
   }
 
   // ---------- 徽章（M5 番茄钟） ----------

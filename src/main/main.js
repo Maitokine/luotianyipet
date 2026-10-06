@@ -1,5 +1,5 @@
 // 主进程入口：窗口、托盘、单实例、存档、IPC（K1/K2/K9）
-import { app, BrowserWindow, screen, ipcMain } from 'electron';
+import { app, BrowserWindow, screen, ipcMain, globalShortcut } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -111,10 +111,23 @@ if (!gotLock) {
       console.log('[app] window-shown');
     });
     win.on('closed', () => { win = null; });
+    win.on('blur', () => { if (ipc) ipc.broadcast('ui:close-menu'); });
 
     ipc = registerIpc({ win, store, app, mediaState });
     tray = createTray({ win, store, ipc });
     ipc.onTrayReady(() => tray.rebuild()); // 状态变化（设置写入/UI 上报）后刷新托盘菜单
+
+    // 全局快捷键 Ctrl+Shift+G：切换「游戏模式」——整窗可交互，解决游戏内无法点击小人
+    const toggleGameMode = () => {
+      const s = store.get();
+      const next = { settings: { gameMode: !s.settings.gameMode } };
+      const applied = store.apply(next);
+      store.flush();
+      ipc.broadcast('state:changed', applied);
+      tray.rebuild();
+    };
+    globalShortcut.register('Ctrl+Shift+G', toggleGameMode);
+    app.on('will-quit', () => { globalShortcut.unregisterAll(); });
 
     // 系统媒体监听（双通道：SMTC + 音频会话）：
     // 状态变化推送给渲染层驱动跳舞（K8：失败自动禁用跳舞，不影响其他功能）
