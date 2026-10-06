@@ -3,24 +3,7 @@
 一只跑在 Windows 桌面上的 Q 版洛天依桌面宠物。她会沿任务栏散步、发呆、打瞌睡，能摸摸、能拖拽甩飞、能点歌陪你听，还会**跟着系统正在播放的音乐一起跳舞**。
 
 > 个人自用项目：**双击单个 exe 即可运行**（绿色免安装），无需登录、无需账号，所有数据保存在本机。
-> 形象与名称版权归上海禾念所有，本项目为个人二创，不分发、不传播。
-
----
-
-## 目录
-
-- [功能特性](#功能特性)
-- [技术栈](#技术栈)
-- [目录结构](#目录结构)
-- [快速开始](#快速开始)
-- [命令行参数](#命令行参数)
-- [数据与存档](#数据与存档)
-- [形象动画与序列帧](#形象动画与序列帧)
-- [跟随系统音乐跳舞](#跟随系统音乐跳舞)
-- [测试与验收](#测试与验收)
-- [文档索引](#文档索引)
-- [已知限制](#已知限制)
-- [版权与许可](#版权与许可)
+> 形象与名称版权归上海禾念所有，本项目为个人二创。
 
 ---
 
@@ -82,74 +65,6 @@
 
 ---
 
-## 目录结构
-
-```
-luotianyipet/
-├── package.json              入口、脚本（start / test / build）与打包配置
-├── README.md                 本文件
-├── docs/
-│   ├── DESIGN.md             设计附册（界面图示与数值表）
-│   ├── DEV_PLAN.md           开发计划（里程碑、技术决策 K1~K10、风险预案）
-│   ├── ACCEPTANCE.md         A1~A29 验收记录
-│   └── LINES.md              台词库总览（505 句，从 dialogue.js 自动导出）
-├── build/                    打包资源（icon.png）
-├── scripts/                  Python 辅助脚本
-│   ├── gen_icon.py           图标生成
-│   └── gen_sfx.py            音效合成
-├── src/
-│   ├── preload.cjs           contextBridge 白名单 API（window.petApi）
-│   ├── shared/               主进程与渲染层共用模块
-│   │   ├── menumodel.js      菜单数据源（托盘与角色右键同源）
-│   │   ├── profile.js        存档结构定义与校验
-│   │   ├── winpos.js         窗口位置夹取（整窗可见 / 右下角落点）
-│   │   ├── lrc.js            LRC 歌词解析
-│   │   └── sysjudge.js       系统感知阈值判定
-│   ├── main/                 主进程
-│   │   ├── main.js           入口：窗口、生命周期、单实例、smoke/selftest 钩子
-│   │   ├── ipc.js            全部 IPC 通道注册
-│   │   ├── tray.js           托盘图标与原生菜单
-│   │   ├── store.js          存档：防抖 / 定时 / 退出保存 / 损坏恢复
-│   │   ├── media.js          SMTC + Core Audio 双通道媒体监听（核心）
-│   │   ├── netease.js        网易云请求代理（无 CORS 限制）
-│   │   ├── sysinfo.js        CPU 采样
-│   │   └── autostart.js      开机自启（注册表 Run 键）
-│   ├── renderer/
-│   │   ├── index.html        桌宠窗口
-│   │   ├── settings.html     设置窗口
-│   │   ├── css/              pet.css / menu.css / settings.css
-│   │   └── js/
-│   │       ├── pet.js        渲染层入口，装配各模块
-│   │       ├── fsm.js        行为状态机（核心）
-│   │       ├── sprite.js     序列帧动画层（SpriteLayer）
-│   │       ├── animation.js  SVG 骨骼动画引擎（Rig，回退）
-│   │       ├── physics.js    抛出物理模拟
-│   │       ├── interact.js   手势系统（单击 / 双击 / 拖 / 甩）
-│   │       ├── geo.js        命中检测（透明区穿透）
-│   │       ├── bubble.js     气泡 / 歌词条 / 徽章 UI
-│   │       ├── menu.js       HTML 右键菜单
-│   │       ├── growth.js     等级 / 经验 / 好感 / 解锁
-│   │       ├── dialogue.js   台词库加载与抽取
-│   │       ├── music.js      播放控制
-│   │       ├── dance.js      跳舞判定（消费媒体事件）
-│   │       ├── reminders.js  提醒四件套
-│   │       ├── settings.js   设置窗口逻辑
-│   │       ├── sfx.js        音效播放
-│   │       ├── selftest.js   真实环境自检
-│   │       ├── windowctl.js  窗口控制
-│   │       ├── outfit.js     换装
-│   │       ├── palettes.js   配色变量
-│   │       └── bus.js        事件总线
-│   └── assets/
-│       ├── sprites/          序列帧（8 动作 × 16 帧）
-│       ├── sfx/              音效 wav
-│       └── icon-tray.png     托盘图标
-├── tests/                    自研单测 / 集成测试（test-*.mjs）
-├── data/                     运行时存档（profile.json、profile.bak，不入库）
-└── dist/                     打包输出（洛天依桌宠.exe，不入库）
-```
-
----
 
 ## 快速开始
 
@@ -207,7 +122,7 @@ npm run build        # electron-builder --win portable
 
 ### 能看到托盘图标、音乐也能放，但桌面上看不到小人
 
-这是**透明窗口被隐藏或跑到屏幕外**造成的，与功能是否正常无关（主进程一直在工作）。两条已知成因都已做防护：
+这是**透明窗口被隐藏或跑到屏幕外**造成的，与功能是否正常无关（主进程一直在工作）。三条已知成因都已做防护：
 
 1. **显示事件未触发**：窗口以 `show:false` 创建，早期实现只依赖 `ready-to-show` 显示窗口——而该事件在部分机器/显卡环境下会**永不触发**（Electron 已知问题，官方文档注明与 `paintWhenInitiallyHidden`、fullscreen、preload 等多种场景相关）。现在叠加 `did-finish-load`、`did-fail-load` 与 3 秒超时三重兜底，任一先到即显示。
 2. **窗口落在屏幕外**：桌宠是 300×420 的透明窗口，只要大部分离开工作区就等于"消失"。现在初始位置、拖动落点、显示前都会把窗口夹取到工作区内，并要求至少 60% 面积可见。
@@ -219,6 +134,15 @@ npm run build        # electron-builder --win portable
 - 删除存档里的 `pos` 字段（`data/profile.json`），或直接删掉该文件
 
 **诊断**：用 `--win-debug` 启动可看到 `[app] window-shown via=... bounds=... visible=... displays=...`，据此判断是"从未显示"（`via` 为 `timeout-fallback`）、"显示在屏外"（`bounds` 超出工作区），还是"显示了但没画出来"（`visible=true` 却看不见）。
+
+### 再次启动没反应 / 测试跑不起来
+
+单实例锁生效（设计如此，避免多开）。若上一个实例是被**强制结束**的，可能残留用户数据目录下的 `lockfile`
+（`%APPDATA%\luotianyi-pet\lockfile`）——它在被占用期间**无法删除**（会报 `Device or resource busy`），
+运行中的实例正常退出后会自动释放，无需手动清理。
+
+> 这也解释了 `tests/test-persist.mjs` 常见的 2 项失败：桌宠本体在跑时，测试启动的 Electron 拿不到单实例锁，
+> 会**静默退出**（exit 0 但无 `STATE:` 输出）。跑测试前先退出桌宠即可。
 
 ---
 
@@ -330,5 +254,5 @@ npm run build        # electron-builder --win portable
 
 ## 版权与许可
 
-- 洛天依形象与名称版权归**上海禾念**所有；本项目为个人自用二创，**仅供本人观赏，不分发、不传播**。
-- 代码许可：`UNLICENSED`（个人自用，未开源授权）。
+- 洛天依形象与名称版权归**上海禾念**所有；本项目为个人自用二创。
+
