@@ -3,24 +3,9 @@
 一只跑在 Windows 桌面上的 Q 版洛天依桌面宠物。她会沿任务栏散步、发呆、打瞌睡，能摸摸、能拖拽甩飞、能点歌陪你听，还会**跟着系统正在播放的音乐一起跳舞**。
 
 > 个人自用项目：**双击单个 exe 即可运行**（绿色免安装），无需登录、无需账号，所有数据保存在本机。
-> 形象与名称版权归上海禾念所有，本项目为个人二创，不分发、不传播。
+> 形象与名称版权归上海禾念所有，本项目为个人二创。
 
 ---
-
-## 目录
-
-- [功能特性](#功能特性)
-- [技术栈](#技术栈)
-- [目录结构](#目录结构)
-- [快速开始](#快速开始)
-- [命令行参数](#命令行参数)
-- [数据与存档](#数据与存档)
-- [形象动画与序列帧](#形象动画与序列帧)
-- [跟随系统音乐跳舞](#跟随系统音乐跳舞)
-- [测试与验收](#测试与验收)
-- [文档索引](#文档索引)
-- [已知限制](#已知限制)
-- [版权与许可](#版权与许可)
 
 ---
 
@@ -82,73 +67,6 @@
 
 ---
 
-## 目录结构
-
-```
-luotianyipet/
-├── package.json              入口、脚本（start / test / build）与打包配置
-├── PRD.md                    产品需求文档（唯一需求来源）
-├── README.md                 本文件
-├── docs/
-│   ├── DESIGN.md             设计附册（界面图示与数值表）
-│   ├── DEV_PLAN.md           开发计划（里程碑、技术决策 K1~K10、风险预案）
-│   └── ACCEPTANCE.md         A1~A29 验收记录
-├── build/                    打包资源（icon.png）
-├── scripts/                  Python 辅助脚本
-│   ├── gen_icon.py           图标生成
-│   └── gen_sfx.py            音效合成
-├── src/
-│   ├── preload.cjs           contextBridge 白名单 API（window.petApi）
-│   ├── shared/               主进程与渲染层共用模块
-│   │   ├── menumodel.js      菜单数据源（托盘与角色右键同源）
-│   │   ├── profile.js        存档结构定义与校验
-│   │   ├── lrc.js            LRC 歌词解析
-│   │   └── sysjudge.js       系统感知阈值判定
-│   ├── main/                 主进程
-│   │   ├── main.js           入口：窗口、生命周期、单实例、smoke/selftest 钩子
-│   │   ├── ipc.js            全部 IPC 通道注册
-│   │   ├── tray.js           托盘图标与原生菜单
-│   │   ├── store.js          存档：防抖 / 定时 / 退出保存 / 损坏恢复
-│   │   ├── media.js          SMTC + Core Audio 双通道媒体监听（核心）
-│   │   ├── netease.js        网易云请求代理（无 CORS 限制）
-│   │   ├── sysinfo.js        CPU 采样
-│   │   └── autostart.js      开机自启（注册表 Run 键）
-│   ├── renderer/
-│   │   ├── index.html        桌宠窗口
-│   │   ├── settings.html     设置窗口
-│   │   ├── css/              pet.css / menu.css / settings.css
-│   │   └── js/
-│   │       ├── pet.js        渲染层入口，装配各模块
-│   │       ├── fsm.js        行为状态机（核心）
-│   │       ├── sprite.js     序列帧动画层（SpriteLayer）
-│   │       ├── animation.js  SVG 骨骼动画引擎（Rig，回退）
-│   │       ├── physics.js    抛出物理模拟
-│   │       ├── interact.js   手势系统（单击 / 双击 / 拖 / 甩）
-│   │       ├── geo.js        命中检测（透明区穿透）
-│   │       ├── bubble.js     气泡 / 歌词条 / 徽章 UI
-│   │       ├── menu.js       HTML 右键菜单
-│   │       ├── growth.js     等级 / 经验 / 好感 / 解锁
-│   │       ├── dialogue.js   台词库加载与抽取
-│   │       ├── music.js      播放控制
-│   │       ├── dance.js      跳舞判定（消费媒体事件）
-│   │       ├── reminders.js  提醒四件套
-│   │       ├── settings.js   设置窗口逻辑
-│   │       ├── sfx.js        音效播放
-│   │       ├── selftest.js   真实环境自检
-│   │       ├── windowctl.js  窗口控制
-│   │       ├── outfit.js     换装
-│   │       ├── palettes.js   配色变量
-│   │       └── bus.js        事件总线
-│   └── assets/
-│       ├── sprites/          序列帧（8 动作 × 16 帧）
-│       ├── sfx/              音效 wav
-│       └── icon-tray.png     托盘图标
-├── tests/                    自研单测 / 集成测试（test-*.mjs）
-├── data/                     运行时存档（profile.json、profile.bak，不入库）
-└── dist/                     打包输出（洛天依桌宠.exe，不入库）
-```
-
----
 
 ## 快速开始
 
@@ -301,5 +219,5 @@ npm run build        # electron-builder --win portable
 
 ## 版权与许可
 
-- 洛天依形象与名称版权归**上海禾念**所有；本项目为个人自用二创，**仅供本人观赏，不分发、不传播**。
-- 代码许可：`UNLICENSED`（个人自用，未开源授权）。
+- 洛天依形象与名称版权归**上海禾念**所有；本项目为个人自用二创。
+
