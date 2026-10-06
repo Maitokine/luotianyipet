@@ -79,9 +79,15 @@ npm install          # 安装依赖（Electron 等）
 npm start            # 启动桌宠
 ```
 
-> ⚠️ **重要**：若你的环境里设置了 `ELECTRON_RUN_AS_NODE` 环境变量，启动前必须清除，否则 Electron 会被当成纯 Node 运行而报错：
+> ⚠️ **重要**：若你的环境里设置了 `ELECTRON_RUN_AS_NODE` 环境变量，启动前必须清除，否则 Electron 会被当成纯 Node 运行而报错。**请务必用 shell 内建方式清除，不要用 `env -u` 前缀**——`env` 是外部程序，若 PATH 中被同名脚本遮蔽（例如误放成 `~/.local/bin/env` 的 venv activate 脚本），它会静默不执行命令并返回 0，造成"看似成功实则空跑"的假象：
 > ```bash
-> env -u ELECTRON_RUN_AS_NODE npm start
+> unset ELECTRON_RUN_AS_NODE && npm start      # bash / Git Bash
+> ```
+> ```bat
+> set ELECTRON_RUN_AS_NODE= && npm start       :: cmd
+> ```
+> ```powershell
+> Remove-Item Env:ELECTRON_RUN_AS_NODE; npm start   # PowerShell
 > ```
 
 ### 运行测试
