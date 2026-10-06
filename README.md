@@ -152,7 +152,7 @@ npm run build        # electron-builder --win portable
 - **目录优先级**：
   1. portable exe 同目录（`PORTABLE_EXECUTABLE_DIR/data`）
   2. 开发态项目目录 `data/`
-  3. 不可写时回退 `%APPDATA%\LuoTianyiPet\data`
+  3. 不可写时回退 `%APPDATA%\luotianyi-pet\data`
 - **保存时机**：数值变化防抖 2 秒 + 每 5 分钟定时 + 退出前保存
 - **损坏恢复**：主档损坏时自动用 `.bak` 恢复，不会清零好感与等级
 - 存档字段：等级 / 经验 / 好感 / 陪伴分钟 / 互动次数 / 听歌数 / 已解锁项 / 当前服装 / 窗口位置 / 全部设置 / 便签列表
