@@ -12,7 +12,6 @@ export const SIZE_PRESETS = [
 export const MANUAL_ACTIONS = [
   { id: 'sit', label: '坐下' },
   { id: 'sleep', label: '睡觉' },
-  { id: 'daze', label: '发呆' },
   { id: 'dance', label: '跳舞', unlockId: 'dance', level: 3 },
 ];
 

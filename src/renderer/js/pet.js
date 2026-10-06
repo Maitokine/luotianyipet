@@ -37,12 +37,10 @@ function moodLabel(f) {
     }
   }
   switch (f.daily) {
-    case 'daze': return '发呆中';
-    case 'pace': return '踱步中';
-    case 'hum': return '哼着歌';
     case 'sleep': return '睡着了 Zzz';
     case 'sit': return '乖乖坐着';
-    default: return '闲逛中';
+    case 'walk': return '闲逛中';
+    default: return '待机中';
   }
 }
 

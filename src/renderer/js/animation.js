@@ -51,18 +51,10 @@ export const ACTIONS = {
       { legL: { rot: -4 }, legR: { rot: 4 }, armL: { rot: 4 }, armR: { rot: -4 }, char: { dy: 0 } },
     ],
   },
-  daze: {
-    fps: 2, loop: true, friendlyBlink: true,
+  sit: {
+    fps: 1, loop: true, friendlyBlink: true,
     frames: [
-      { head: { rot: 6, dy: 1 }, face: { mouth: 'smile' } },
-      { head: { rot: 10, dy: 2.5 }, face: { eyes: 'open', mouth: 'smile' } },
-    ],
-  },
-  pace: {
-    fps: 6, loop: true, friendlyBlink: true,
-    frames: [
-      { legL: { rot: 12 }, legR: { rot: -12 }, char: { dy: -1 }, tailL: { rot: 3 } },
-      { legL: { rot: -12 }, legR: { rot: 12 }, char: { dy: -1 }, tailR: { rot: 3 } },
+      { legL: { sy: 0.18, dy: -2 }, legR: { sy: 0.18, dy: -2 }, armL: { rot: 18 }, armR: { rot: -18 }, char: { dy: 14, sy: 0.92 }, face: { mouth: 'smile' } },
     ],
   },
   sleep: {
@@ -70,15 +62,6 @@ export const ACTIONS = {
     frames: [
       { char: { rot: -84, dy: 6, dx: -6 }, face: { eyes: 'closed', mouth: 'smile' }, head: { rot: 8 } },
       { char: { rot: -84, dy: 6, dx: -6, sy: 1.02 }, face: { eyes: 'closed', mouth: 'smile' }, head: { rot: 8 } },
-    ],
-  },
-  hum: {
-    fps: 3, loop: true, friendlyBlink: true,
-    frames: [
-      { char: { rot: -3 }, face: { mouth: 'smile' }, armL: { rot: 8 } },
-      {},
-      { char: { rot: 3 }, face: { mouth: 'smile' }, armR: { rot: 8 } },
-      {},
     ],
   },
   sing: {
@@ -90,50 +73,13 @@ export const ACTIONS = {
       { char: { dy: 0 }, armL: { rot: -20 }, armR: { rot: -100 }, face: { eyes: 'happy', mouth: 'open' } },
     ],
   },
-  dance1: {
-    fps: 5, loop: true,
+  dance: {
+    fps: 6, loop: true,
     frames: [
       { char: { dy: -7 }, armL: { rot: -150 }, armR: { rot: 30 }, head: { rot: -8 }, legL: { rot: 10 }, face: { eyes: 'happy', mouth: 'open' } },
       { char: { dy: 0 }, armL: { rot: -80 }, armR: { rot: -30 }, head: { rot: 0 }, face: { eyes: 'happy', mouth: 'smile' } },
       { char: { dy: -7 }, armL: { rot: 30 }, armR: { rot: -150 }, head: { rot: 8 }, legR: { rot: 10 }, face: { eyes: 'happy', mouth: 'open' } },
       { char: { dy: 0 }, armL: { rot: -30 }, armR: { rot: -80 }, head: { rot: 0 }, face: { eyes: 'happy', mouth: 'smile' } },
-    ],
-  },
-  dance2: {
-    fps: 4, loop: true,
-    frames: [
-      { char: { dx: -5, rot: -8 }, armL: { rot: -130 }, armR: { rot: -60 }, face: { eyes: 'happy', mouth: 'open' }, legL: { rot: 14 } },
-      { char: { dx: 0, dy: -3 }, armL: { rot: -70 }, armR: { rot: -70 }, face: { eyes: 'happy', mouth: 'smile' } },
-      { char: { dx: 5, rot: 8 }, armL: { rot: -60 }, armR: { rot: -130 }, face: { eyes: 'happy', mouth: 'open' }, legR: { rot: 14 } },
-      { char: { dx: 0, dy: -3 }, armL: { rot: -70 }, armR: { rot: -70 }, face: { eyes: 'happy', mouth: 'smile' } },
-    ],
-  },
-  dance3: {
-    fps: 6, loop: true,
-    frames: [
-      { char: { dy: -8, rot: -12 }, armL: { rot: -160 }, armR: { rot: -160 }, head: { rot: -10 }, face: { eyes: 'closed', mouth: 'open' } },
-      { char: { dy: 0, rot: 0 }, armL: { rot: -20 }, armR: { rot: -20 }, head: { rot: 0 }, face: { eyes: 'happy', mouth: 'smile' } },
-      { char: { dy: -8, rot: 12 }, armL: { rot: -160 }, armR: { rot: -160 }, head: { rot: 10 }, face: { eyes: 'closed', mouth: 'open' } },
-      { char: { dy: 0, rot: 0 }, armL: { rot: -20 }, armR: { rot: -20 }, head: { rot: 0 }, face: { eyes: 'happy', mouth: 'smile' } },
-    ],
-  },
-  jump: {
-    fps: 10, loop: false,
-    frames: [
-      { char: { sy: 0.82, dy: 6 }, head: { dy: 2 }, legL: { rot: -8 }, legR: { rot: 8 } },
-      { char: { dy: -26, sy: 1.06 }, armL: { rot: -150 }, armR: { rot: -150 }, legL: { rot: 10 }, legR: { rot: -10 }, face: { eyes: 'happy', mouth: 'open' } },
-      { char: { dy: -14 }, armL: { rot: -60 }, armR: { rot: -60 } },
-      { char: { sy: 0.88, dy: 4 }, head: { dy: 1.5 } },
-    ],
-  },
-  shake: {
-    fps: 16, loop: false,
-    frames: [
-      { char: { dx: -3 }, head: { rot: -6 } },
-      { char: { dx: 3 }, head: { rot: 6 } },
-      { char: { dx: -3 }, head: { rot: -6 } },
-      { char: { dx: 3 }, head: { rot: 6 } },
-      {},
     ],
   },
   grabbed: {
@@ -143,52 +89,13 @@ export const ACTIONS = {
       { legL: { rot: 22 }, legR: { rot: -10 }, armL: { rot: -135 }, armR: { rot: -145 }, face: { eyes: 'open', mouth: 'open' }, char: { dy: -3 } },
     ],
   },
-  fly: {
-    fps: 8, loop: true,
+  jump: {
+    fps: 10, loop: false,
     frames: [
-      { armL: { rot: -160 }, armR: { rot: -160 }, legL: { rot: 18 }, legR: { rot: -18 }, face: { eyes: 'open', mouth: 'open' } },
-      { armL: { rot: -150 }, armR: { rot: -170 }, legL: { rot: 10 }, legR: { rot: -26 }, face: { eyes: 'open', mouth: 'open' } },
-    ],
-  },
-  land: {
-    fps: 8, loop: false,
-    frames: [
-      { char: { sy: 0.7, sx: 1.2, dy: 8 }, head: { dy: 3 } },
-      { char: { sy: 1.12, sx: 0.94, dy: -3 } },
-      {},
-    ],
-  },
-  wake: {
-    fps: 6, loop: false,
-    frames: [
-      { face: { eyes: 'closed', mouth: 'puff' }, head: { dy: 2 } },
-      { char: { dx: -2 }, face: { eyes: 'open', mouth: 'puff' }, head: { rot: -6 } },
-      { char: { dx: 2 }, face: { eyes: 'open', mouth: 'puff' }, head: { rot: 6 } },
-      {},
-    ],
-  },
-  happy: {
-    fps: 5, loop: false,
-    frames: [
-      { char: { dy: -9 }, armL: { rot: -150 }, armR: { rot: -150 }, face: { eyes: 'happy', mouth: 'open' } },
-      { char: { dy: 0, sy: 0.94 }, armL: { rot: -30 }, armR: { rot: -30 }, face: { eyes: 'happy', mouth: 'smile' } },
-      { char: { dy: -6 }, armL: { rot: -150 }, armR: { rot: -150 }, face: { eyes: 'happy', mouth: 'open' } },
-      {},
-    ],
-  },
-  angry: {
-    fps: 8, loop: false,
-    frames: [
-      { char: { dx: -3 }, head: { rot: -5 }, face: { eyes: 'open', mouth: 'puff' } },
-      { char: { dx: 3 }, head: { rot: 5 }, face: { eyes: 'open', mouth: 'puff' } },
-      { char: { dx: -2 }, head: { rot: -3 }, face: { eyes: 'open', mouth: 'puff' } },
-      { face: { eyes: 'open', mouth: 'puff' }, head: { rot: 0 } },
-    ],
-  },
-  sit: {
-    fps: 1, loop: true, friendlyBlink: true,
-    frames: [
-      { legL: { sy: 0.18, dy: -2 }, legR: { sy: 0.18, dy: -2 }, armL: { rot: 18 }, armR: { rot: -18 }, char: { dy: 14, sy: 0.92 }, face: { mouth: 'smile' } },
+      { char: { sy: 0.82, dy: 6 }, head: { dy: 2 }, legL: { rot: -8 }, legR: { rot: 8 } },
+      { char: { dy: -26, sy: 1.06 }, armL: { rot: -150 }, armR: { rot: -150 }, legL: { rot: 10 }, legR: { rot: -10 }, face: { eyes: 'happy', mouth: 'open' } },
+      { char: { dy: -14 }, armL: { rot: -60 }, armR: { rot: -60 } },
+      { char: { sy: 0.88, dy: 4 }, head: { dy: 1.5 } },
     ],
   },
 };

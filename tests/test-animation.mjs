@@ -5,9 +5,7 @@ import {
 import { pointOnCharacter, computeGroundY, clampWalkX } from '../src/renderer/js/geo.js';
 
 const REQUIRED_ACTIONS = [
-  'idle', 'walk', 'daze', 'pace', 'sleep', 'hum', 'sing',
-  'dance1', 'dance2', 'dance3', 'jump', 'shake', 'grabbed', 'fly',
-  'land', 'wake', 'happy', 'angry', 'sit',
+  'idle', 'walk', 'sit', 'sleep', 'sing', 'dance', 'grabbed', 'jump',
 ];
 
 export async function run(t) {
@@ -69,7 +67,7 @@ export async function run(t) {
   t.ok(Object.keys(pose).length === 11, '完整姿态含 11 个部件/face');
 
   // 8. 时长：单次动作 ≤ 2 秒（打断态应及时结束）
-  for (const name of ['jump', 'shake', 'land', 'wake', 'happy', 'angry']) {
+  for (const name of ['jump']) {
     const d = actionDuration(name);
     t.ok(d > 0 && d <= 2, `${name} 时长合理 (${d.toFixed(2)}s)`);
   }

@@ -94,29 +94,31 @@ export function run(t) {
     t.eq(fsm.daily, 'walk', '29.5s 时仍在闲逛');
     tickN(fsm, 1);
     t.eq(fsm.daily, 'pace', '30s 后触发踱步（roll=0.5）');
-    t.ok(rig.calls.plays.includes('pace'), '播放踱步动画');
+    t.ok(rig.calls.plays.includes('walk'), '踱步视觉上映射为 walk');
     tickN(fsm, 8.5);
     t.eq(fsm.daily, 'walk', '踱步 8s 后回闲逛');
   }
   {
     // rand=0.2 → roll=0.2 → daze
-    const { fsm } = makeFsm({ rand: () => 0.2 });
+    const { fsm, rig } = makeFsm({ rand: () => 0.2 });
     fsm.setGeometry({ workArea: WA });
     fsm.start();
     fsm.idleSecs = 40; // 直接越过阈值（冷却 15+0.2*10=17s）
     tickN(fsm, 18);
     t.eq(fsm.daily, 'daze', 'roll=0.2 → 发呆（持续 4+0.2*6≈5.2s）');
+    t.ok(rig.calls.plays.includes('idle'), '发呆视觉上映射为 idle');
     tickN(fsm, 5.5);
     t.eq(fsm.daily, 'walk', '发呆结束后回闲逛');
   }
   {
     // rand=0.9 → roll=0.9 → hum + 音符特效
-    const { fsm, bubble } = makeFsm({ rand: () => 0.9 });
+    const { fsm, rig, bubble } = makeFsm({ rand: () => 0.9 });
     fsm.setGeometry({ workArea: WA });
     fsm.start();
     fsm.idleSecs = 40;
     tickN(fsm, 25);
     t.eq(fsm.daily, 'hum', 'roll=0.9 → 哼唱');
+    t.ok(rig.calls.plays.includes('idle'), '哼唱视觉上映射为 idle');
     tickN(fsm, 3);
     t.ok(bubble.calls.fxs.filter((k) => k === 'note').length >= 2, '哼唱期间冒音符特效');
     tickN(fsm, 20);
@@ -160,7 +162,7 @@ export function run(t) {
     const r = fsm.trigger('click');
     t.eq(r, 'woken', '睡中单击返回 woken');
     t.eq(fsm.idleSecs, 0, '互动即时重置闲置计时');
-    t.ok(rig.calls.plays.includes('wake'), '播放惊醒动画');
+    t.ok(rig.calls.plays.includes('jump'), '播放惊醒 jump 动画');
     t.eq(fsm.interrupt.type, 'click-react', '进入单击互动打断');
     tickN(fsm, 2.2);
     t.eq(fsm.interrupt, null, '惊醒互动 2s 后结束');
@@ -178,7 +180,7 @@ export function run(t) {
     tickN(fsm, 2);
     const r = fsm.trigger('click');
     t.eq(r, 'react', '单击返回 react');
-    t.ok(['jump', 'shake'].includes(rig.calls.plays[rig.calls.plays.length - 1]), '播放 jump/shake 互动动画');
+    t.eq(rig.calls.plays[rig.calls.plays.length - 1], 'jump', '播放 jump 互动动画');
     t.eq(fsm.interrupt.type, 'click-react', '进入打断');
     t.eq(fsm.daily, 'daze', '日常状态保持 daze（快照）');
     tickN(fsm, 1);
@@ -221,9 +223,9 @@ export function run(t) {
     // 原地放下（无速度）→ 物理 → 落地动画 → 恢复
     const r2 = fsm.trigger('drag-end');
     t.eq(r2, 'settling', '放下进入物理下落');
-    t.ok(rig.calls.plays.includes('fly'), '下落播放 fly 动画');
+    t.ok(rig.calls.plays.includes('grabbed'), '下落播放 grabbed 动画');
     tickN(fsm, 3);
-    t.ok(rig.calls.plays.includes('land'), '落地播放 land 动画');
+    t.ok(rig.calls.plays.includes('jump'), '落地播放 jump 动画');
     t.eq(fsm.interrupt, null, '落地动画后退出打断');
     t.eq(fsm.daily, 'walk', '恢复闲逛');
     t.close(fsm.winY, 620, 2, '最终贴地（groundY=620）');
@@ -238,13 +240,13 @@ export function run(t) {
     fsm.trigger('drag-move', { x: 900, y: 200 });
     const r = fsm.trigger('throw', { vx: -2500, vy: -1800 });
     t.eq(r, 'thrown', '甩出返回 thrown');
-    t.ok(rig.calls.plays.includes('fly'), '飞行播放 fly 动画');
+    t.ok(rig.calls.plays.includes('grabbed'), '飞行播放 grabbed 动画');
     let landed = false;
     for (let i = 0; i < 60 * 15 && !landed; i++) {
       fsm.tick(DT);
-      landed = rig.calls.plays.includes('land');
+      landed = rig.calls.plays.includes('jump');
     }
-    t.ok(landed, '抛出后最终落地');
+    t.ok(landed, '抛出后最终落地（jump）');
     t.ok(fsm.winX >= -240 - 1 && fsm.winX <= 1860 + 1, `x 在边界内（实际 ${fsm.winX.toFixed(0)}）`);
     t.close(fsm.winY, 620, 2, '落地贴地');
     tickN(fsm, 1.2);
@@ -291,18 +293,16 @@ export function run(t) {
     t.ok(bubble.calls.fxs.filter((k) => k === 'note').length >= 2, '唱歌期间冒音符');
   }
 
-  // ---------- 跳舞轮换舞步（6s 一换） ----------
+  // ---------- 跳舞只用一个 dance 动作 ----------
   {
     const { fsm, rig } = makeFsm();
     fsm.setGeometry({ workArea: WA });
     fsm.start();
     fsm.beginDance({ source: 'music', duration: 20 });
     tickN(fsm, 0.5);
-    t.eq(rig._action, 'dance1', '起舞 dance1');
-    tickN(fsm, 6);
-    t.eq(rig._action, 'dance2', '6s 后轮换 dance2');
-    tickN(fsm, 6);
-    t.eq(rig._action, 'dance3', '12s 后轮换 dance3');
+    t.eq(rig._action, 'dance', '起舞 dance');
+    tickN(fsm, 12);
+    t.eq(rig._action, 'dance', '12s 后仍为 dance');
     tickN(fsm, 8);
     t.eq(fsm.interrupt, null, '20s 时长到自动结束');
   }
@@ -315,7 +315,7 @@ export function run(t) {
     const r = fsm.notify({ text: '久坐提醒', ms: 5000 });
     t.eq(r, true, '空闲时 notify 打断成功');
     t.eq(fsm.interrupt.type, 'notify', '进入 notify 打断');
-    t.ok(rig.calls.plays.includes('happy'), '播放 happy 动画');
+    t.ok(rig.calls.plays.includes('dance'), '播放 dance 庆祝动画');
     t.ok(bubble.calls.says.some((s) => s.text === '久坐提醒'), '显示提醒文案');
     tickN(fsm, 5.2);
     t.eq(fsm.interrupt, null, '提醒结束恢复');
@@ -331,8 +331,7 @@ export function run(t) {
     t.ok(rig.calls.plays.includes('sit'), '播放坐下');
     t.eq(fsm.manualAction('dance'), true, '跳舞指令');
     t.eq(fsm.dancing, true, '进入跳舞');
-    t.eq(fsm.manualAction('daze'), true, '发呆指令');
-    t.eq(fsm.daily, 'daze', '进入发呆');
+    t.eq(fsm.manualAction('daze'), false, '发呆指令已删除');
     t.eq(fsm.manualAction('bogus'), false, '未知指令拒绝');
     // 被抓时拒绝指令
     fsm.trigger('drag-start');

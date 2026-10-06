@@ -28,7 +28,7 @@ export class Fsm {
     // 唱歌被更高优先级打断（拖拽/抛掷）时通知 music 模块停音频（否则音频会在 fsm 已退出唱歌态后继续播）
     this.onSingInterrupted = deps.onSingInterrupted || null;
 
-    this.daily = 'walk';            // walk/daze/pace/hum/sleep/sit
+    this.daily = 'walk';            // walk/daze/pace/hum/sleep/sit；daze/pace/hum 视觉上映射为 idle/walk
     this.interrupt = null;          // { type, data, elapsed }
     this.idleSecs = 0;              // 距上次用户互动
     this.dailySecs = 0;             // 当前日常状态持续
@@ -165,14 +165,14 @@ export class Fsm {
         this.rig?.setFlip(this.walkDir < 0);
         break;
       case 'daze':
-        this.rig?.play('daze');
+        this.rig?.play('idle');
         break;
       case 'pace':
-        this.rig?.play('pace');
+        this.rig?.play('walk');
         this.paceAnchor = this.winX;
         break;
       case 'hum':
-        this.rig?.play('hum');
+        this.rig?.play('idle');
         this._sayScene('hum-start');
         break;
       case 'sleep':
@@ -245,9 +245,8 @@ export class Fsm {
           this._exitInterrupt();
           break;
         }
-        // 每 6 秒轮换舞步
-        const want = `dance${(Math.floor(it.elapsed / 6) % 3) + 1}`;
-        if (this.rig && this.rig.action !== want) this.rig.play(want);
+        // 只有单一舞步，持续播放 dance 动画
+        if (this.rig && this.rig.action !== 'dance') this.rig.play('dance');
         this._fxAcc += dt;
         if (this._fxAcc >= 1.4) { this._fxAcc = 0; this.bubble?.fx('note'); }
         break;
@@ -268,7 +267,7 @@ export class Fsm {
         if (landed) {
           it.data.landing = true;
           it.data.landDeadline = this.clock + 1.0;
-          this.rig?.play('land', {
+          this.rig?.play('jump', {
             onDone: () => { if (this.interrupt?.type === 'physics') this._exitInterrupt(); },
           });
           this.sfx?.play('land');
@@ -291,15 +290,14 @@ export class Fsm {
           // 惊醒（A9）：闹小脾气
           this.daily = 'walk';
           this._enterInterrupt('click-react');
-          this.rig?.play('wake');
+          this.rig?.play('jump');
           this._sayScene('wake');
           return 'woken';
         }
         if (!this.canInterrupt('click-react')) return 'ignored';
         this._enterInterrupt('click-react');
-        const act = this.rand() < 0.5 ? 'jump' : 'shake';
-        this.rig?.play(act);
-        if (act === 'jump') this.sfx?.play('jump');
+        this.rig?.play('jump');
+        this.sfx?.play('jump');
         this._sayScene('click');
         return 'react';
       }
@@ -325,14 +323,14 @@ export class Fsm {
       case 'drag-end': {
         this._enterInterrupt('physics');
         this.physics.settle(this.winX, this.winY, this._bounds());
-        this.rig?.play('fly');
+        this.rig?.play('grabbed');
         return 'settling';
       }
       case 'throw': {
         this._markInteraction();
         this._enterInterrupt('physics');
         this.physics.launch(data.vx || 0, data.vy || 0, this.winX, this.winY, this._bounds());
-        this.rig?.play('fly');
+        this.rig?.play('grabbed');
         this._sayScene('thrown');
         return 'thrown';
       }
@@ -356,7 +354,7 @@ export class Fsm {
   beginDance({ source = 'music', duration = 0 } = {}) {
     if (!this.canInterrupt('dance')) return false;
     this._enterInterrupt('dance', { source, duration });
-    this.rig?.play('dance1');
+    this.rig?.play('dance');
     this._sayScene('dance');
     return true;
   }
@@ -378,7 +376,7 @@ export class Fsm {
     if (scene) this._sayScene(scene);
     if (!this.canInterrupt('notify')) return false;
     this._enterInterrupt('notify', { ms });
-    this.rig?.play('happy');
+    this.rig?.play('dance');
     return true;
   }
 
@@ -390,11 +388,11 @@ export class Fsm {
       this._resume = null;
       return this.beginDance({ source: 'manual', duration: 10 });
     }
-    if (['sit', 'daze', 'sleep'].includes(name)) {
+    if (['sit', 'sleep'].includes(name)) {
       this.interrupt = null;
       this._resume = null;
       this.idleSecs = 0;
-      this._enterDaily(name, name === 'daze' ? 30 : 0);
+      this._enterDaily(name, 0);
       return true;
     }
     return false;

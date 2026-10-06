@@ -4,7 +4,14 @@
 
 // 动作 → 序列帧资源配置。fps 是播放帧率，loop 是否循环。
 export const SPRITE_ACTIONS = {
-  walk: { fps: 8, loop: true, dir: '../assets/sprites/walk' },
+  idle:    { fps: 6, loop: true,  dir: '../assets/sprites/idle' },
+  walk:    { fps: 8, loop: true,  dir: '../assets/sprites/walk' },
+  sit:     { fps: 4, loop: true,  dir: '../assets/sprites/sit' },
+  sleep:   { fps: 2, loop: true,  dir: '../assets/sprites/sleep' },
+  sing:    { fps: 6, loop: true,  dir: '../assets/sprites/sing' },
+  dance:   { fps: 8, loop: true,  dir: '../assets/sprites/dance' },
+  grabbed: { fps: 6, loop: true,  dir: '../assets/sprites/grabbed' },
+  jump:    { fps: 8, loop: false, dir: '../assets/sprites/jump' },
 };
 
 export class SpriteLayer {
