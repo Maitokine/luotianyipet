@@ -1,4 +1,4 @@
-// 设置窗口逻辑（M5 / T5.4，PRD §3.3）：四页签 + 与主窗实时同步
+// 设置窗口逻辑（M5 / T5.4）：四页签 + 与主窗实时同步
 // 写入一律走 api.setState（主进程落档 + 广播 state:changed → 各窗刷新）或 sendAction（主进程/桌宠窗执行）
 import { OUTFIT_ITEMS } from '../../shared/menumodel.js';
 import { RIG_PALETTES } from './palettes.js';

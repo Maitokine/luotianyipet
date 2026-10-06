@@ -39,7 +39,7 @@ function dateStrOf(ms) {
 }
 
 export function run(t) {
-  // ---- 常量与 PRD §5.5 对齐 ----
+  // ---- 常量与 DESIGN 4.1/4.2 对齐 ----
   t.eq(EXP_REWARDS, { companionMinute: 1, click: 2, song: 15, pomodoro: 10 }, '经验四来源数值');
   t.eq(AFFECTION_REWARDS, { click: 1, song: 3, pomodoro: 2 }, '好感三来源数值');
   t.eq(AFFECTION_DAILY_CAP, 30, '单击好感日上限 30');
@@ -123,7 +123,7 @@ export function run(t) {
     const g1 = growth.onSongCompleted();
     t.eq(g1, { exp: 15, affection: 3 }, '听完歌 +15 经验 +3 好感');
     t.eq(state.songsCompleted, 1, '听歌数 +1');
-    // 听歌好感不受日上限约束（PRD 仅单击受限）
+    // 听歌好感不受日上限约束（原 PRD 仅单击受限）
     state.affectionToday = { date: '', count: 30 };
     growth.advance(1000);
     const g2 = growth.onSongCompleted();

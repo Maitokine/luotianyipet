@@ -89,7 +89,7 @@ function setup({ pickResult, lyricResult, allowBegin = true, humMs = HUM_MS, lyr
 }
 
 export async function run(t) {
-  t.eq(REWARD_RATIO, 0.6, '结算阈值 60%（PRD §5.5）');
+  t.eq(REWARD_RATIO, 0.6, '结算阈值 60%（DESIGN 4.1/4.2）');
 
   // ---- A17 点歌成功 ----
   {

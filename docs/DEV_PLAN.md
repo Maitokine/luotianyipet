@@ -2,8 +2,8 @@
 
 | 项 | 内容 |
 |---|---|
-| 依据 | PRD.md V1.0（唯一需求来源） |
-| 原则 | 每个里程碑结束都是**可运行版本**；每个任务有明确产出文件与验收项（A 编号对应 PRD §9） |
+| 依据 | 原 PRD.md V1.0（已移除；需求口径现由本文件与 DESIGN/ACCEPTANCE 承载） |
+| 原则 | 每个里程碑结束都是**可运行版本**；每个任务有明确产出文件与验收项（A 编号对应 A1~A29） |
 | 技术栈 | Electron（主进程 Node.js + 渲染层原生 HTML/CSS/JS，不引入前端框架）+ AI 生成精灵图 + Python 辅助脚本（素材处理、音效合成） |
 
 ---
@@ -23,7 +23,7 @@ M0 骨架 ──▶ M1 形象与窗口 ──▶ M2 行为与互动 ──┬─
 
 ```
 E:\luotianyipet\
-├── PRD.md / docs\{DESIGN.md, DEV_PLAN.md}
+├── docs\{DESIGN.md, DEV_PLAN.md, ACCEPTANCE.md}
 ├── package.json
 ├── build\                          打包资源（图标、builder 配置）
 ├── scripts\                        Python 辅助脚本
@@ -72,7 +72,7 @@ E:\luotianyipet\
 - 窗口：`transparent:true, frame:false, alwaysOnTop:true, skipTaskbar:true, hasShadow:false`，尺寸 **300×420**（底部 180px 角色区 + 上方 240px 气泡/歌词/徽章区）
 - 置顶层级 `win.setAlwaysOnTop(true, 'screen-saver')`，菜单切换
 - **透明区域永远穿透**（否则 300×420 的隐形框挡住下面窗口）：默认 `setIgnoreMouseEvents(true, {forward:true})`；渲染层监听 `mousemove`，用**离屏 Canvas 像素检测**（预渲染当前帧的 alpha 图，鼠标坐标查 alpha>0 即命中）动态切换为可交互
-- PRD 的"鼠标穿透开关"= 全局强制穿透（连角色身体也穿透），开启时忽略命中检测
+- 原 PRD 的"鼠标穿透开关"= 全局强制穿透（连角色身体也穿透），开启时忽略命中检测
 
 ### K2 行走地面与窗口定位（A7）
 - 地面 = `screen.getPrimaryDisplay().workArea` 底边（自动避开任务栏）
@@ -91,7 +91,7 @@ E:\luotianyipet\
 
 ### K5 状态机（fsm.js，全项目中枢）
 - 状态注册表：`{name, enter(), exit(), tick(dt), interruptible}`；两栈设计：**日常栈**（闲逛/发呆/踱步/睡觉/哼唱）与**打断队列**（单击互动/唱歌/跳舞/物理/提醒）
-- 打断进入时快照日常状态；打断结束弹栈恢复（PRD"记得回去做刚才的事"）
+- 打断进入时快照日常状态；打断结束弹栈恢复（原 PRD"记得回去做刚才的事"）
 - 唱歌与跳舞互斥：唱歌优先级高；唱完检查 SMTC 仍播放 → 自动转跳舞（A22）
 
 ### K6 素材流水线（scripts/gen_assets.py）
@@ -129,7 +129,7 @@ E:\luotianyipet\
 | 热门歌曲 | `GET /api/artist/{id}` | 取 hotSongs（约50首），**fee∈{0,8} 视为可播**，列表缓存 24h |
 | 歌词 | `GET /api/song/lyric?id={id}&lv=1&kv=1&tv=-1` | lrc 字段 |
 | 音频 | `https://music.163.com/song/media/outer/url?id={id}.mp3` | 302 至 CDN；Renderer `<audio>` 直接播 |
-- 降级链（PRD §5.7）：歌手页失败 → 内置 5 首 ID 兜底（开发期先手工核对这 5 首的 ID 与可播性）→ 全失败 → 哼唱 + 台词
+- 降级链（DEV_PLAN K7）：歌手页失败 → 内置 5 首 ID 兜底（开发期先手工核对这 5 首的 ID 与可播性）→ 全失败 → 哼唱 + 台词
 - 所有请求 8 秒超时；失败重试 1 次
 
 ### K8 SMTC 跳舞（media.js + dance.js）
@@ -141,7 +141,7 @@ E:\luotianyipet\
 - 路径：`process.env.PORTABLE_EXECUTABLE_DIR`（打包后）→ exe 旁 `data/profile.json`；不可写回退 `app.getPath('userData')`
 - 写入策略：防抖 2s + 每 5 分钟 + `before-quit`；每次写入前 `profile.json → profile.bak`
 - 启动时：主档损坏 → 用 .bak 恢复并气泡告知"档案刚才吓了一跳，已经找回来了"
-- 字段 = PRD §5.14 + 歌手 ID 缓存 + 好感今日计数/衰减日期 + 便签列表
+- 字段 = DESIGN 八·数据存档 + 歌手 ID 缓存 + 好感今日计数/衰减日期 + 便签列表
 
 ### K10 打包（M6）
 - electron-builder `win portable` 单 exe；`asarUnpack` 精灵图与原生模块；图标 256px PNG 转ico
@@ -199,9 +199,9 @@ E:\luotianyipet\
 | # | 任务 | 产出 | 验收 | 依赖 |
 |---|---|---|---|---|
 | T5.1 | 提醒四件套：久坐/喝水/番茄钟（徽章倒计时）/便签（每天重复），全部走打断态+存档 | reminders.js | **A23、A24、A25** | T2.1、T2.5 |
-| T5.2 | 系统感知：Battery API（≤20% 且未充电提醒一次，插电重置）+ CPU 采样（>85% 持续 30s，10 分钟冷却） | sysinfo.js + 事件台词 | PRD 感知补充项 | T3.2 |
+| T5.2 | 系统感知：Battery API（≤20% 且未充电提醒一次，插电重置）+ CPU 采样（>85% 持续 30s，10 分钟冷却） | sysinfo.js + 事件台词 | 原 PRD 感知补充项 | T3.2 |
 | T5.3 | HTML 右键菜单：12 项四组、二级菜单、勾选态实时同步（角色右键与托盘同源） | menu.js、menu.css | **A6** 及菜单全项 | T1.4、T3.4、T5.1 |
-| T5.4 | 设置窗口四页签（PRD §3.3）：成长/换装/提醒/通用，与主窗实时同步，含「跳舞不可用」态 | settings.html/js | **A16** | T3.1、T5.1 |
+| T5.4 | 设置窗口四页签（DEV_PLAN T5.4）：成长/换装/提醒/通用，与主窗实时同步，含「跳舞不可用」态 | settings.html/js | **A16** | T3.1、T5.1 |
 | T5.5 | 音效合成：跳跃/落地/开心/提醒/番茄完成 5 个 8-bit 音效（numpy 合成 wav） | gen_sfx.py、sfx/ | 事件触发有声 | - |
 
 ### M6 打包与总验收（产出：交付 exe）
@@ -210,7 +210,7 @@ E:\luotianyipet\
 | T6.1 | 开机自启（setLoginItemSettings）+ 开关三方同步 | main.js 扩展 | **A28** | T5.3 |
 | T6.2 | electron-builder：portable 配置、asarUnpack、图标、存档路径（PORTABLE_EXECUTABLE_DIR） | build 配置 | exe 双击即用 | M5 全部 |
 | T6.3 | 持久化全链路：退出/重启/杀进程/损坏档案恢复验证 | - | **A26、A27、A29** | T6.2 |
-| T6.4 | **A1–A29 全清单走查**：按 PRD §9 逐条执行、记录、修复回归 | 验收记录表 | 全部勾选 | T6.2 |
+| T6.4 | **A1–A29 全清单走查**：按 A1~A29 逐条执行、记录、修复回归 | 验收记录表 | 全部勾选 | T6.2 |
 
 ---
 
@@ -218,13 +218,13 @@ E:\luotianyipet\
 
 | # | 风险 | 概率 | 预案 |
 |---|---|---|---|
-| R1 | node-nowplaying 编译失败（Node ABI 不匹配） | 中 | 尝试 prebuild → electron-rebuild；仍失败按 K8 自动禁用跳舞，**不阻塞交付**（PRD 允许） |
+| R1 | node-nowplaying 编译失败（Node ABI 不匹配） | 中 | 尝试 prebuild → electron-rebuild；仍失败按 K8 自动禁用跳舞，**不阻塞交付**（原 PRD 允许） |
 | R2 | 网易云非官方接口变动/限流 | 中 | 降级链三层（歌手页→5 首兜底→哼唱）；所有请求超时+单次重试；24h 缓存减少调用 |
 | R3 | AI 素材帧间不一致（闪烁） | 中 | K6 降级策略：单帧+CSS transform；先做 4 个关键动作（走/唱/跳/睡）验证流水线再批量 |
 | R4 | portable exe 存档写丢（临时目录坑） | 高发坑 | K9 已规避：PORTABLE_EXECUTABLE_DIR 优先 + 不可写回退 userData；T6.3 专项验证 |
 | R5 | 手势冲突（单击误判双击、拖拽误判点击） | 低 | K3 阈值调参（250/400ms、6px）留配置项，T2.3 实测校准 |
 | R6 | 透明窗口在某些 Win 显卡驱动下发黑 | 低 | 关硬件加速开关兜底（`app.disableHardwareAcceleration()`），保留开关位 |
-| R7 | 双显示器 workArea 取错屏 | 中 | V1 明确锁定主屏（PRD 已界定），代码注释预留多屏接口 |
+| R7 | 双显示器 workArea 取错屏 | 中 | V1 明确锁定主屏（原 PRD 已界定），代码注释预留多屏接口 |
 
 ---
 
@@ -236,7 +236,7 @@ E:\luotianyipet\
 5. 成长项：A13 计数 → A14 档位台词 → A15 升级解锁 → A16 成长页
 6. 工具项：A23 久坐喝水 → A24 番茄钟 → A25 便签 → 感知补充项
 7. 持久项：A26 重启保档 → A27 重启电脑 → A28 自启 → A29 存档位置确认
-- 走查全程记录 PRD §9 副本勾选，发现缺陷当场登记、修复后回归该项及其相邻项
+- 走查全程记录 A1~A29 副本勾选，发现缺陷当场登记、修复后回归该项及其相邻项
 
 ---
 

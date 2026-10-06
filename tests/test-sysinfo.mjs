@@ -1,4 +1,4 @@
-// 系统感知单测（T5.2，PRD §5.10）：电量判定 / CPU 判定 / CPU 采样 / 滚动均值 / 电池监听装配
+// 系统感知单测（T5.2）：电量判定 / CPU 判定 / CPU 采样 / 滚动均值 / 电池监听装配
 import {
   BatteryJudge, CpuJudge, sampleCpuPercent, attachBatteryWatch,
 } from '../src/shared/sysjudge.js';

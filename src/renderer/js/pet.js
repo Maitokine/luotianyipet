@@ -244,7 +244,7 @@ async function main() {
   api.onSysEvent((e) => {
     if (e && e.type === 'cpu-high') fsm.notify({ scene: 'cpu-high', sfx: 'alert' });
   });
-  // 电量监听失败（Battery API 缺失/环境异常）不应拖垮主流程：静默禁用即可（PRD：缺失则禁用）
+  // 电量监听失败（Battery API 缺失/环境异常）不应拖垮主流程：静默禁用即可（原 PRD：缺失则禁用）
   try {
     attachBatteryWatch({
       getBattery: () => (typeof navigator !== 'undefined' && navigator.getBattery
@@ -258,7 +258,7 @@ async function main() {
     console.warn('[pet] battery watch disabled:', err && err.message);
   }
 
-  // 冷落回归：距上次互动超过 48h，见面先说一句（PRD 冷落回归场景）
+  // 冷落回归：距上次互动超过 48h，见面先说一句（原 PRD 冷落回归场景）
   if (state.lastInteractionAt && Date.now() - state.lastInteractionAt > DECAY_GRACE_MS) {
     const line = dialogue.pick('return', growth.tierKey(), Math.random);
     if (line) bubble.say(line, 5000);
@@ -285,7 +285,7 @@ async function main() {
   }, 1000);
   growth.applyDecay(); // 启动先补算一次冷落衰减
 
-  // 闲逛随机真唱（PRD §3.3 通用页，默认关）：哼唱日常态下低概率接一首真歌
+  // 闲逛随机真唱（DEV_PLAN T5.4 通用页，默认关）：哼唱日常态下低概率接一首真歌
   setInterval(() => {
     if (idleSingChance({
       enabled: current.settings.idleRealSing,

@@ -11,7 +11,7 @@ export const CLICK_GAIN_COOLDOWN_MS = 10000; // 10s 内连点不重复计（A13�
 export const EXP_REWARDS = { companionMinute: 1, click: 2, song: 15, pomodoro: 10 };
 export const AFFECTION_REWARDS = { click: 1, song: 3, pomodoro: 2 };
 
-// 解锁表（PRD §5.5）——当前仅保留默认装
+// 解锁表（DESIGN 4.1/4.2）——当前仅保留默认装
 // 注：跳舞（dance）已按用户要求解除等级限制（检测到系统媒体播放即跳），不再作为 Lv.3 解锁项
 export const UNLOCKS = [
   { level: 1, id: 'outfit_default', label: '洛天依 · 默认装' },

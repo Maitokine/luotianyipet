@@ -9,7 +9,7 @@ const REQUIRED_ACTIONS = [
 ];
 
 export async function run(t) {
-  // 1. 动作注册表完整（PRD §5.1 + K6 规格表）
+  // 1. 动作注册表完整（K6 规格表）
   for (const name of REQUIRED_ACTIONS) {
     t.ok(ACTIONS[name] != null, `动作存在：${name}`);
   }

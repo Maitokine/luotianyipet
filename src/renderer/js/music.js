@@ -2,14 +2,14 @@
 // createAudio / api 可注入（Node 单测用假 <audio> 与假 IPC）
 import { parseLrc, LyricSync } from '../../shared/lrc.js';
 
-export const REWARD_RATIO = 0.6;   // 播放 ≥60% 视为听完（PRD §5.5）
+export const REWARD_RATIO = 0.6;   // 播放 ≥60% 视为听完（DESIGN 4.1/4.2）
 export const HUM_MS = 20000;       // 哼唱模式时长
 export const IDLE_SING_CHANCE = 0.15; // 闲逛哼唱时触发真唱的概率（每 5s 判定一次）
 // 歌词轮询兜底周期：timeupdate 在部分流媒体/后台节流场景下会稀疏甚至缺失，
 // 仅靠它会让歌词"卡住不动"；此处额外定时按 currentTime 推进，双保险。
 export const LYRIC_POLL_MS = 250;
 
-// 闲逛随机真唱判定（PRD §3.3 通用页开关，默认关）：仅在哼唱日常态且不忙时可触发
+// 闲逛随机真唱判定（DEV_PLAN T5.4 通用页开关，默认关）：仅在哼唱日常态且不忙时可触发
 export function idleSingChance({
   enabled = false, daily = '', singing = false, dancing = false, grabbed = false, rand = Math.random,
 } = {}) {

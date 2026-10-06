@@ -22,7 +22,7 @@ function hotResp(songs) {
 
 export async function run(t) {
   // ---- 兜底与常量 ----
-  t.eq(FALLBACK_SONGS.length, 5, '内置兜底 5 首（PRD §5.7）');
+  t.eq(FALLBACK_SONGS.length, 5, '内置兜底 5 首（DEV_PLAN K7）');
   t.ok(FALLBACK_SONGS.every((s) => Number.isFinite(s.id) && s.name), '兜底曲目结构完整');
   t.eq(KNOWN_ARTIST_ID, 906118, '洛天依Official 歌手 ID（开发期核对）');
   t.eq(CACHE_TTL_MS, 24 * 3600000, '歌单缓存 24h');

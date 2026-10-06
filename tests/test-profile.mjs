@@ -16,7 +16,7 @@ export async function run(t) {
   t.ok(p.settings.pomodoro.focus === 25 && p.settings.pomodoro.rest === 5, '番茄钟默认 25+5');
   t.ok(Array.isArray(p.unlocked) && p.unlocked.includes('outfit_default'), '默认解锁初始服装');
 
-  // 经验阈值表（PRD §5.5）
+  // 经验阈值表（DESIGN 4.1/4.2）
   t.eq(expThreshold(1), 0, 'Lv1 阈值 0');
   t.eq(expThreshold(2), 120, 'Lv2 阈值 120');
   t.eq(expThreshold(3), 300, 'Lv3 阈值 300');
@@ -32,7 +32,7 @@ export async function run(t) {
   t.eq(levelFromExp(2800), 8, 'exp 2800 → Lv8');
   t.eq(levelFromExp(3600), 9, 'exp 3600 → Lv9');
 
-  // 好感档位（PRD §5.5 五档边界）
+  // 好感档位（DESIGN 4.1/4.2 五档边界）
   t.eq(affectionTier(0).key, 'stranger', '0 → 陌生');
   t.eq(affectionTier(19).key, 'stranger', '19 → 陌生');
   t.eq(affectionTier(20).key, 'familiar', '20 → 熟悉');

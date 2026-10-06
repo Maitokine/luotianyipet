@@ -8,7 +8,7 @@ export const BASE = 'https://music.163.com';
 // 洛天依Official（歌手页 50 首热门，实测 44 首可播）
 export const KNOWN_ARTIST_ID = 906118;
 
-// 内置兜底 5 首（PRD §5.7；原版 VIP 不可播的用洛天依演唱免费版替代，均已实测 302 可播）
+// 内置兜底 5 首（DEV_PLAN K7；原版 VIP 不可播的用洛天依演唱免费版替代，均已实测 302 可播）
 export const FALLBACK_SONGS = [
   { id: 1983315125, name: '普通DISCO' }, // 洛天依/言和 · Mawaru Premix（原版 VIP）
   { id: 2753428108, name: '达拉崩吧' },  // 洛天依 · 乌鱼禅师P cover（原版 VIP）

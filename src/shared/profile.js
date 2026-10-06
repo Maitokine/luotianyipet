@@ -1,7 +1,7 @@
 // 共享：存档数据模型（主进程与渲染层、测试共用，禁止依赖 Electron/DOM）
 export const SCHEMA_VERSION = 1;
 
-// 好感度五档（PRD §5.5）
+// 好感度五档（DESIGN 4.1/4.2）
 export const AFFECTION_TIERS = [
   { min: 0, max: 19, key: 'stranger', label: '陌生' },
   { min: 20, max: 39, key: 'familiar', label: '熟悉' },

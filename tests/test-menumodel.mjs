@@ -1,4 +1,4 @@
-// menumodel 单测（T5.3，PRD §3.2）：14 项四组结构、勾选/单选态、解锁门控、动作分发语义
+// menumodel 单测（T5.3）：14 项四组结构、勾选/单选态、解锁门控、动作分发语义
 import { buildMenuModel, itemAction, SIZE_PRESETS } from '../src/shared/menumodel.js';
 import { defaultProfile } from '../src/shared/profile.js';
 
