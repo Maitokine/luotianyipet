@@ -52,7 +52,8 @@ export class Dance {
     this.fsm = fsm;
     this.judge = judge;
     this.onUnavailable = onUnavailable;
-    // 解锁门控（PRD §5.5：Lv.3 解锁跳舞动作）——手动/跟随/唱完衔接全部受控
+    // 门控钩子（默认放行）：产品层已解除跳舞的等级限制
+    // （用户要求——系统媒体播放即跳），保留该能力供后续按需扩展。
     this.canDance = canDance || (() => true);
     this.status = { playing: false, available: true };
     this._raf = null;
@@ -76,7 +77,7 @@ export class Dance {
 
   tick(dt) {
     if (!this.canDance()) {
-      // 未解锁：不进入跳舞；已在跳（刚降级/读档异常）则立即退出
+      // 门控拒绝：不进入跳舞；已在跳（刚被禁用/读档异常）则立即退出
       if (this.judge.dancing) {
         this.judge.dancing = false;
         this.judge.playSecs = 0;

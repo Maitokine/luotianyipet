@@ -176,13 +176,23 @@ export function run(t) {
     t.eq(fsm.calls.begin.length, 0, '未调用 beginDance');
   }
 
-  // ---------- Lv.3 解锁门控（PRD §5.5 跳舞动作） ----------
+  // ---------- 门控能力（架构保留）----------
+  // 产品层已按用户要求解除跳舞的等级限制（pet.js 不再注入 canDance），
+  // 但 Dance 类保留该能力，便于后续按需恢复/扩展门控。
+  {
+    const fsm = makeFsm();
+    const d = new Dance({ fsm });
+    t.eq(d.canDance(), true, '未注入门控时默认允许跳舞');
+    d.onMediaStatus({ playing: true, available: true });
+    for (let s = 0; s < 5.5; s += 0.5) d.tick(0.5);
+    t.eq(fsm.calls.begin.length, 1, '默认允许时播放满 5s 正常触发跳舞');
+  }
   {
     const fsm = makeFsm();
     const d = new Dance({ fsm, canDance: () => false });
     d.onMediaStatus({ playing: true, available: true });
     for (let s = 0; s < 12; s += 0.5) d.tick(0.5);
-    t.eq(fsm.calls.begin.length, 0, '未解锁时播放多久都不触发跳舞');
+    t.eq(fsm.calls.begin.length, 0, '注入 false 门控时播放多久都不触发');
   }
   {
     let unlocked = false;

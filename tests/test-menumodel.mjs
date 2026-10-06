@@ -67,19 +67,13 @@ export function run(t) {
     t.eq(act, { action: 'pet.size', payload: { scale: SIZE_PRESETS[0].scale } }, '尺寸项分发 pet.size');
   }
 
-  // ---------- 让她做动作：跳舞 Lv.3 解锁门控 ----------
+  // ---------- 让她做动作：三项均默认可用（跳舞已解除等级限制） ----------
   {
-    let m = buildMenuModel({ state: base }); // unlocked: ['outfit_default']
-    let items = sub(m, 'pet.action');
+    const m = buildMenuModel({ state: base }); // unlocked: ['outfit_default']
+    const items = sub(m, 'pet.action');
     t.eq(items.map((i) => i.label), ['坐下', '睡觉', '跳舞'], '三个动作');
-    t.eq(items.map((i) => i.disabled), [false, false, true], '默认仅跳舞锁定');
-    t.eq(items[2].hint, 'Lv.3 解锁', '锁定项提示解锁等级');
-
-    const s = JSON.parse(JSON.stringify(base));
-    s.unlocked = ['outfit_default', 'lines_lively', 'dance', 'outfit_spring'];
-    m = buildMenuModel({ state: s });
-    t.eq(sub(m, 'pet.action').map((i) => i.disabled), [false, false, false], '解锁后跳舞可用');
-    t.eq(sub(m, 'pet.action')[2].hint, null, '解锁后无提示');
+    t.eq(items.map((i) => i.disabled), [false, false, false], '三项均可用（跳舞不再需要 Lv.3）');
+    t.eq(items[2].hint, null, '跳舞无解锁等级提示');
   }
 
   // ---------- 换装：当前仅保留默认装 ----------

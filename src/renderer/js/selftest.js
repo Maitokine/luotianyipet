@@ -2,7 +2,7 @@
 // 番茄钟 tick 驱动、气泡 setTimeout、音乐点歌/歌词链路、右键菜单点击链路是否真的工作。
 // 结果经 selftest:log IPC 打到主进程 stdout，供开发定位运行时问题。
 
-export async function runSelftest({ api, reminders, bubble, music, fsm, doc, menu, windowctl }) {
+export async function runSelftest({ api, reminders, bubble, music, fsm, doc, menu, windowctl, dance }) {
   const log = (m) => { try { api.selftestLog(String(m)); } catch { /* ignore */ } };
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const win = (doc && doc.defaultView) || (typeof window !== 'undefined' ? window : null);
@@ -103,9 +103,28 @@ export async function runSelftest({ api, reminders, bubble, music, fsm, doc, men
       log('menu selftest skipped (no menu/win)');
     }
 
-    // 清理
+    // 清理（先停唱歌/番茄钟，避免打断态占用 fsm 使跳舞无法进入）
     music.stopSing();
     reminders.stopPomodoro();
+    await sleep(200);
+
+    // ---- 6) 系统媒体（SMTC）→ 跳舞链路 ----
+    // 真机反馈：网易云/浏览器视频播放时不跳舞。这里既打印判定器真实状态，
+    // 也注入一次「系统媒体播放中」端到端验证 media → dance judge → fsm 全链路。
+    if (dance) {
+      const st = dance.status || {};
+      log(`dance canDance=${dance.canDance ? dance.canDance() : 'n/a'}` +
+        ` enabled=${dance.judge ? dance.judge.enabled : 'n/a'}` +
+        ` playing=${st.playing ? 1 : 0} available=${st.available ? 1 : 0}`);
+      dance.onMediaStatus({ playing: true, available: true });
+      await sleep(5600); // > PLAY_SUSTAIN_S(5s)
+      log(`dance inject playing5.6s → judgeDancing=${dance.judge ? dance.judge.dancing : 'n/a'}` +
+        ` fsmDancing=${fsm.dancing} interrupt=${fsm.interrupt ? fsm.interrupt.type : 'none'}`);
+      dance.onMediaStatus({ playing: false, available: true });
+    } else {
+      log('dance selftest skipped (not injected)');
+    }
+
     log('cleanup done');
   } catch (e) {
     log(`ERROR ${e && e.message ? e.message : String(e)}`);

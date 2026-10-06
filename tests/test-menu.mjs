@@ -56,7 +56,7 @@ function findAll(node, cls, out = []) {
   return out;
 }
 
-// 按标签文本找菜单行（menu-item 的第二个子元素是文本 span；前缀匹配以兼容「跳舞（Lv.3 解锁）」带提示文本）
+// 按标签文本找菜单行（menu-item 的第二个子元素是文本 span；前缀匹配以兼容「标签（提示文本）」）
 function findRow(menuEl, text) {
   return findAll(menuEl, 'menu-item').find((row) => row.children[1] && row.children[1].textContent.startsWith(text));
 }
@@ -123,18 +123,41 @@ export function run(t) {
   }
 
   // ---------- 禁用项：不分发、不关闭 ----------
+  // 注：跳舞已解除等级限制，默认菜单里已无禁用项；此处用自定义模型注入禁用行，
+  // 保证 HtmlMenu 的 disabled 渲染与点击拦截逻辑仍被覆盖。
+  {
+    const { m, doc, actions } = makeMenu();
+    m.open([
+      {
+        label: '测试组',
+        items: [
+          { id: 'ok.item', label: '可用项' },
+          { id: 'lock.item', label: '锁定项', disabled: true, hint: 'Lv.3 解锁' },
+        ],
+      },
+    ], 10, 10);
+    const locked = findRow(doc.els.menu, '锁定项');
+    t.ok(locked, '找到「锁定项」行');
+    t.ok(locked.classList.contains('disabled'), '禁用行带禁用样式');
+    locked.fire('click');
+    t.eq(actions.length, 0, '禁用项不分发');
+    t.eq(m.isOpen, true, '禁用项点击不关闭菜单');
+    t.ok(locked.children[1].textContent.includes('Lv.3 解锁'), '禁用行展示解锁提示');
+    findRow(doc.els.menu, '可用项').fire('click');
+    t.eq(actions.length, 1, '同组可用项正常分发（对照）');
+  }
+
+  // ---------- 默认菜单中「跳舞」已可用（解除等级限制的回归锚点） ----------
   {
     const { m, doc, actions } = makeMenu();
     openDefault(m);
-    // 展开二级再点禁用的「跳舞」
     findRow(doc.els.menu, '让她做动作').fire('click');
     const dance = findRow(doc.els.menu, '跳舞');
     t.ok(dance, '找到「跳舞」行');
-    t.ok(dance.classList.contains('disabled'), '跳舞行带禁用样式');
+    t.ok(!dance.classList.contains('disabled'), '跳舞行不再带禁用样式');
     dance.fire('click');
-    t.eq(actions.length, 0, '禁用项不分发');
-    t.eq(m.isOpen, true, '禁用项点击不关闭菜单');
-    t.ok(dance.children[1].textContent.includes('Lv.3 解锁'), '禁用行展示解锁提示');
+    t.eq(actions.length, 1, '跳舞项可直接分发');
+    t.eq(actions[0], { a: 'pet.action', p: { name: 'dance' } }, '分发 pet.action dance');
   }
 
   // ---------- 手风琴二级菜单 ----------

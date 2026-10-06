@@ -100,7 +100,8 @@ async function main() {
     rand: Math.random,
   });
 
-  const dance = new Dance({ fsm, canDance: () => growth.isUnlocked('dance') }); // 跳舞 Lv.3 解锁
+  // 跳舞：不再受等级限制（用户要求——系统媒体播放即跳；手动菜单项同样默认可用）
+  const dance = new Dance({ fsm });
   dance.sync(state);
   fsm.onSingEnd = () => dance.singEnded(); // A22：唱完接跳舞
 
@@ -172,7 +173,6 @@ async function main() {
         if (Number.isFinite(payload.scale)) api.setState({ settings: { scale: payload.scale } });
         break;
       case 'pet.action': {
-        if (payload.name === 'dance' && !growth.isUnlocked('dance')) break; // Lv.3 解锁
         fsm.manualAction(payload.name);
         break;
       }
@@ -288,7 +288,7 @@ async function main() {
   dance.start();
 
   if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('selftest') === '1') {
-    runSelftest({ api, reminders, bubble, music, fsm, doc: document, menu, windowctl });
+    runSelftest({ api, reminders, bubble, music, fsm, doc: document, menu, windowctl, dance });
     return; // 自检模式不走 smoke 退出流程
   }
   api.smokeReady();

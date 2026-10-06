@@ -12,7 +12,8 @@ export const SIZE_PRESETS = [
 export const MANUAL_ACTIONS = [
   { id: 'sit', label: '坐下' },
   { id: 'sleep', label: '睡觉' },
-  { id: 'dance', label: '跳舞', unlockId: 'dance', level: 3 },
+  // 跳舞已解除等级限制（用户要求：跟随系统音乐/视频播放即跳，手动动作同样默认可用）
+  { id: 'dance', label: '跳舞' },
 ];
 
 export const OUTFIT_ITEMS = [
