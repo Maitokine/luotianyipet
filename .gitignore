@@ -6,8 +6,9 @@ data/
 # 本地工作数据（WorkBuddy 会话/记忆，不入库）
 .workbuddy/
 
-# 日志与系统杂项
-*.log
+# 用户原始素材工作目录（不入库；处理后的资源放 src/assets）
+素材/
+
 npm-debug.log*
 .DS_Store
 Thumbs.db

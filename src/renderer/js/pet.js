@@ -12,6 +12,7 @@ import { Music } from './music.js';
 import { Reminders } from './reminders.js';
 import { HtmlMenu } from './menu.js';
 import { Sfx } from './sfx.js';
+import { SpriteLayer } from './sprite.js';
 import { buildMenuModel } from '../../shared/menumodel.js';
 import { attachBatteryWatch } from '../../shared/sysjudge.js';
 import { idleSingChance } from './music.js';
@@ -62,6 +63,13 @@ async function main() {
 
   const charEl = document.getElementById('char');
   const rig = new Rig(charEl);
+  const spriteLayer = new SpriteLayer(charEl);
+  // 包装 rig.play：让序列帧层与 SVG Rig 同步动作；有 sprite 资源的动作走 canvas，其余走 SVG
+  const rigPlay = rig.play.bind(rig);
+  rig.play = (name, opts) => {
+    spriteLayer.play(name);
+    return rigPlay(name, opts);
+  };
   const bubble = new Bubble({});
   const dialogue = new Dialogue({});
 
