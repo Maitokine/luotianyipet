@@ -53,6 +53,7 @@ export function buildMenuModel({ state, flags = {} } = {}) {
         { id: 'win.always-on-top', label: '置顶显示', type: 'check', checked: Boolean(s.alwaysOnTop) },
         { id: 'win.click-through', label: '鼠标穿透', type: 'check', checked: Boolean(s.clickThrough) },
         { id: 'win.game-mode', label: '游戏模式（强制可交互）', type: 'check', checked: Boolean(s.gameMode) },
+        { id: 'win.reset-pos', label: '把小人叫回屏幕右下角' },
       ],
     },
     {

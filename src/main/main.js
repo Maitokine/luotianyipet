@@ -8,11 +8,16 @@ import { registerIpc } from './ipc.js';
 import { createTray } from './tray.js';
 import { startMediaWatch } from './media.js';
 import { startCpuWatch } from './sysinfo.js';
+import { clampToWorkArea, defaultPos, isSufficientlyVisible } from '../shared/winpos.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SMOKE = process.argv.includes('--smoke');
 const SELFTEST = process.argv.includes('--selftest');
 const DUMP = process.argv.includes('--dump-state');
+// 窗口诊断：打印显示来源、bounds、可见性（排查「小人不出现」）
+const WIN_DEBUG = process.argv.includes('--win-debug');
+// 忽略存档位置，直接回到默认落点（找回小人的兜底手段）
+const RESET_POS = process.argv.includes('--reset-pos');
 // 媒体检测诊断：打印每次状态变化及其判定来源通道（smtc / audio）
 const MEDIA_DEBUG = process.argv.includes('--media-debug');
 const patchIdx = process.argv.indexOf('--apply-patch');
@@ -20,10 +25,15 @@ const APPLY = patchIdx > -1 ? process.argv[patchIdx + 1] : null;
 
 // R6 预案：部分 Windows 显卡驱动/受限环境下 GPU 子进程崩溃（0xC0000005）。
 // 本应用为轻量 2D 矢量动画，统一走软件渲染 + GPU 线程并入主进程，保证任何机器可运行。
-app.disableHardwareAcceleration();
-app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('disable-gpu-compositing');
-app.commandLine.appendSwitch('in-process-gpu');
+// --gpu-on：跳过上述软件渲染开关，改用默认 GPU 合成——用于排查「透明窗口在个别显卡上
+// 完全不绘制/不显示」。默认仍走软件渲染。
+const GPU_ON = process.argv.includes('--gpu-on');
+if (!GPU_ON) {
+  app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('disable-gpu-compositing');
+  app.commandLine.appendSwitch('in-process-gpu');
+}
 // 桌宠为本地单用户应用，不加载任意远程网页（仅音频流），关闭 Chromium 沙箱提升受限环境兼容性
 app.commandLine.appendSwitch('no-sandbox');
 
@@ -37,7 +47,8 @@ if (!gotLock) {
   let ipc = null;
 
   app.on('second-instance', () => {
-    if (win) {
+    if (win && !win.isDestroyed()) {
+      ensureOnScreen(win, win.getBounds().width, win.getBounds().height);
       win.show();
       win.focus();
     }
@@ -75,9 +86,9 @@ if (!gotLock) {
     const { workArea } = screen.getPrimaryDisplay();
     const W = 300;
     const H = 420;
-    const defaultX = workArea.x + workArea.width - W - 60;
-    const defaultY = workArea.y + workArea.height - H;
-    const pos = sanitizePos(state.pos, workArea, W, H) || { x: defaultX, y: defaultY };
+    // 存档位置夹取到工作区内；--reset-pos 或位置非法时回到默认右下角落点。
+    // 必须保证窗口整体可见：透明窗口只要落在屏外就等同于"小人消失"。
+    const pos = (RESET_POS ? null : clampToWorkArea(state.pos, workArea, W, H)) || defaultPos(workArea, W, H);
 
     win = new BrowserWindow({
       width: W,
@@ -106,10 +117,36 @@ if (!gotLock) {
       path.join(__dirname, '../renderer/index.html'),
       SELFTEST ? { search: 'selftest=1' } : undefined,
     );
-    win.once('ready-to-show', () => {
+
+    // 显示兜底：绝不只依赖 ready-to-show —— 该事件在部分机器/显卡环境上会永不触发
+    // （官方文档注明其与 paintWhenInitiallyHidden / fullscreen / preload 等多种失效场景有关）。
+    // 若只等它，窗口会永久隐藏：托盘图标在、媒体与音乐都正常，但看不到小人。
+    // 这里叠加 did-finish-load、did-fail-load 与超时三重兜底，任一先到即显示；
+    // 显示前先确保窗口在屏内（防止存档位置把窗口丢到屏幕外）。
+    let shown = false;
+    const showWindow = (reason) => {
+      if (shown || !win || win.isDestroyed()) return;
+      shown = true;
+      const b = win.getBounds();
+      ensureOnScreen(win, b.width, b.height);
       win.show();
-      console.log('[app] window-shown');
+      const nb = win.getBounds();
+      console.log(
+        `[app] window-shown via=${reason} bounds=${JSON.stringify(nb)} visible=${win.isVisible()}`
+        + (WIN_DEBUG ? ` displays=${screen.getAllDisplays().length} primary=${JSON.stringify(screen.getPrimaryDisplay().workArea)}` : ''),
+      );
+    };
+    win.once('ready-to-show', () => showWindow('ready-to-show'));
+    win.webContents.once('did-finish-load', () => showWindow('did-finish-load'));
+    win.webContents.on('did-fail-load', (_e, code, desc, url) => {
+      console.error(`[app] did-fail-load code=${code} desc=${desc} url=${url}`);
+      showWindow('did-fail-load');
     });
+    win.webContents.on('render-process-gone', (_e, d) => {
+      console.error(`[app] render-process-gone reason=${(d && d.reason) || 'unknown'}`);
+    });
+    setTimeout(() => showWindow('timeout-fallback'), 3000);
+
     win.on('closed', () => { win = null; });
     win.on('blur', () => { if (ipc) ipc.broadcast('ui:close-menu'); });
 
@@ -224,10 +261,15 @@ function resolveDataDir() {
   return path.join(app.getPath('userData'), 'data');
 }
 
-// 位置合法性：确保窗口在主屏工作区可见范围内
-function sanitizePos(pos, workArea, W, H) {
-  if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number') return null;
-  const x = Math.min(Math.max(Math.round(pos.x), workArea.x - W + 60), workArea.x + workArea.width - 60);
-  const y = Math.min(Math.max(Math.round(pos.y), workArea.y), workArea.y + workArea.height - 40);
-  return { x, y };
+// 显示前确保窗口足够可见：若大部分落在所有屏幕之外，拉回默认落点。
+// 透明窗口一旦跑到屏外就完全看不见，这是「小人不出现」的另一条成因。
+function ensureOnScreen(win, W, H) {
+  try {
+    const bounds = win.getBounds();
+    if (isSufficientlyVisible(bounds, screen.getAllDisplays())) return;
+    const { workArea } = screen.getPrimaryDisplay();
+    const p = defaultPos(workArea, W, H);
+    console.warn(`[app] off-screen bounds=${JSON.stringify(bounds)} → reset to ${JSON.stringify(p)}`);
+    win.setPosition(p.x, p.y);
+  } catch { /* 尽力而为，不影响启动 */ }
 }

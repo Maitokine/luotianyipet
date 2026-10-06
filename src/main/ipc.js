@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pickSong, fetchLyric } from './netease.js';
 import { applyAutoStart } from './autostart.js';
+import { clampToWorkArea, defaultPos } from '../shared/winpos.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -67,6 +68,22 @@ export function registerIpc({ win, store, app: appRef, mediaState = { available:
           else win.show();
         }
         break;
+      // 找回小人：把窗口拉回主屏右下角默认落点并强制显示。
+      // 透明窗口若被摆到屏外/边缘，用户会完全看不到它（托盘菜单是唯一入口）。
+      case 'win.reset-pos': {
+        if (win && !win.isDestroyed()) {
+          const { workArea } = screen.getPrimaryDisplay();
+          const b = win.getBounds();
+          const p = defaultPos(workArea, b.width, b.height);
+          win.setPosition(p.x, p.y);
+          win.show();
+          win.focus();
+          store.apply({ pos: { x: p.x, y: p.y } });
+          store.flush();
+          broadcast('state:changed', store.get());
+        }
+        break;
+      }
       case 'app.quit':
         appRef.quit();
         break;
@@ -120,9 +137,10 @@ export function registerIpc({ win, store, app: appRef, mediaState = { available:
     if (!win || win.isDestroyed()) return;
     const { workArea } = screen.getPrimaryDisplay();
     const b = win.getBounds();
-    const cx = Math.min(Math.max(Math.round(x), workArea.x - b.width + 80), workArea.x + workArea.width - 80);
-    const cy = Math.min(Math.max(Math.round(y), workArea.y - b.height + 120), workArea.y + workArea.height - 20);
-    win.setPosition(cx, cy);
+    // 拖动落点同样夹取到工作区内：透明窗口一旦被拖出屏幕就再也看不到，
+    // 只能靠托盘「找回小人」救回。这里直接禁止整体离屏。
+    const p = clampToWorkArea({ x: Math.round(x), y: Math.round(y) }, workArea, b.width, b.height);
+    if (p) win.setPosition(p.x, p.y);
   });
 
   ipcMain.on('win:ignore-mouse', (_e, v) => {

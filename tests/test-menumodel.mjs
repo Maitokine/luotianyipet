@@ -1,4 +1,4 @@
-// menumodel 单测（T5.3，PRD §3.2）：12 项四组结构、勾选/单选态、解锁门控、动作分发语义
+// menumodel 单测（T5.3，PRD §3.2）：14 项四组结构、勾选/单选态、解锁门控、动作分发语义
 import { buildMenuModel, itemAction, SIZE_PRESETS } from '../src/shared/menumodel.js';
 import { defaultProfile } from '../src/shared/profile.js';
 
@@ -9,19 +9,20 @@ function sub(model, id) { return find(model, id).items; }
 export function run(t) {
   const base = defaultProfile();
 
-  // ---------- 结构：四组十二项 ----------
+  // ---------- 结构：四组十四项 ----------
   {
     const m = buildMenuModel({ state: base });
     t.eq(m.map((g) => g.label), ['音乐', '窗口', '互动', '系统'], '四组标签顺序正确');
-    t.eq(topItems(m).length, 13, '顶层共 13 项');
+    t.eq(topItems(m).length, 14, '顶层共 14 项');
     t.eq(
       topItems(m).map((i) => i.id),
       [
         'music.toggle', 'win.toggle-visible', 'win.always-on-top', 'win.click-through', 'win.game-mode',
+        'win.reset-pos',
         'pet.size', 'pet.action', 'pet.outfit', 'tools.reminders',
         'app.growth', 'app.settings', 'app.autostart', 'app.quit',
       ],
-      '13 项 id 完整且分组正确',
+      '14 项 id 完整且分组正确',
     );
     t.eq(topItems(m).filter((i) => i.type === 'submenu').length, 4, '互动组四项均为二级菜单');
   }
@@ -46,6 +47,9 @@ export function run(t) {
     t.eq(find(m, 'win.always-on-top').checked, false, '置顶关闭时勾选态为假');
     t.eq(find(m, 'win.click-through').checked, true, '穿透开启时勾选态为真');
     t.eq(find(m, 'win.game-mode').checked, true, '游戏模式开启时勾选态为真');
+    t.eq(find(m, 'win.reset-pos').type, undefined, '找回小人项为普通动作项（非勾选）');
+    t.eq(itemAction(find(m, 'win.reset-pos')), { action: 'win.reset-pos', payload: undefined },
+      '找回小人项分发的动作 id 正确');
   }
 
   // ---------- 尺寸：单选态 ----------

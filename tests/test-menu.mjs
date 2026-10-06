@@ -88,9 +88,9 @@ export function run(t) {
     t.eq(m.isOpen, true, 'open 后进入打开态');
     t.ok(!doc.els.menu.classList.contains('hidden'), '打开时移除 hidden');
     t.eq(findAll(doc.els.menu, 'menu-group').length, 4, '渲染四个分组');
-    t.eq(findAll(doc.els.menu, 'menu-node').filter((n) => n.parentNode.classList.contains('menu-group')).length, 13, '顶层 13 个节点');
-    // 顶层 menu-node = 4 个 submenu 节点 + 9 个普通节点；二级行：尺寸3 + 动作4 + 换装3 + 提醒4
-    t.eq(findAll(doc.els.menu, 'menu-item').length, 9 + 4 + 3 + 3 + 1 + 4, '含二级菜单总行数齐全（24 行）');
+    t.eq(findAll(doc.els.menu, 'menu-node').filter((n) => n.parentNode.classList.contains('menu-group')).length, 14, '顶层 14 个节点');
+    // 顶层 menu-node = 4 个 submenu 节点 + 10 个普通节点；二级行：尺寸3 + 动作3 + 换装1 + 提醒4
+    t.eq(findAll(doc.els.menu, 'menu-item').length, 10 + 4 + 3 + 3 + 1 + 4, '含二级菜单总行数齐全（25 行）');
     t.eq(findAll(doc.els.menu, 'menu-sub').length, 4, '四个二级容器');
   }
 
